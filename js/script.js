@@ -58,12 +58,13 @@ $(function () {
 
     function initMap() {
 
-        var location = new google.maps.LatLng(40.4237, -86.9212);
+        // Geographic center of continental US
+        var location = new google.maps.LatLng(39.8282, -98.5795);
 
         var mapCanvas = document.getElementById('map');
         var mapOptions = {
             center: location,
-            zoom: 12,
+            zoom: 3,
             //            panControl: false,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         }
