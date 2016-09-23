@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # STANDARD LIBRARY
-from datetime import timedelta
+import datetime
 from functools import update_wrapper
 from ftplib import FTP
 import json
@@ -30,14 +30,17 @@ def calculate():
 #    destination = request.form.get('destination')
 #    date = request.form.get('date')
     destination = request.args.get('destination')
-    date = request.args.get('date')
+    mydate = request.args.get('date')
     print destination
-    print date
+#    print "I like donkeys"
     
     # TODO parse date
+    datefmt = "%m/%d/%Y"
+    parsed_date = datetime.datetime.strptime(mydate, datefmt)
+    month_number = parsed_date.month
+    month_name = parsed_date.strftime("%B")
     
-    # TODO Query Google Maps to convert address to lat/long
-    # (from JavaScript)
+#    print mydate, month_number, month_name
     
     # possibly temporarily use zip codes
 #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
@@ -113,7 +116,9 @@ def calculate():
         #print stationid, stnid, stnid == stationid
         if stnid == stationid:
             cooling_result = line
-    print cooling_result
+#    print cooling_result
+    cooling_list = cooling_result.split()
+    cooling_value = int(cooling_list[month_number][:-1])
     
 #    hundredths of inches for average monthly/seasonal/annual precipitation, 
 #    month-to-date/year-to-date precipitation, and percentiles of precipitation. 
@@ -128,11 +133,18 @@ def calculate():
         #print stationid, stnid, stnid == stationid
         if stnid == stationid:
             precip_result = line
-    print precip_result
+#    print precip_result
+    precip_list = precip_result.split()
+    precip_value = int(precip_list[month_number][:-1])
+    
+    result_text = "At your destination, {month_name} normally has {0} cooling degree days and {1} inches of rain".format(cooling_value, precip_value * 0.01, month_name=month_name)
+    
+    result_dict = dict(text=result_text,
+                       risk="low")
     
     # TODO determine amount of degree days and precipitation needed for mosquitoes
     
-    return jsonify(result="low")
+    return jsonify(result=result_dict)
 
 if __name__ == "__main__":
     app.run()
