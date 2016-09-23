@@ -57,9 +57,7 @@ function drawChart() {
 
 // map
 var map;
-var geocoder;
 $(function () {
-    geocoder = new google.maps.Geocoder();
 
     function initMap() {
 
@@ -82,42 +80,60 @@ $(function () {
 
 });
 
+// Geocoding promise
+var geocoder = new google.maps.Geocoder();
+
+function geocode(address) {
+    // Return a new promise.
+    return new Promise(function (resolve, reject) {
+        geocoder.geocode({
+            'address': address
+        }, function (results, status) {
+            if (status == 'OK') {
+                resolve(results[0]);
+            } else {
+                reject(Error(status));
+            }
+        });
+    });
+}
+
 // Process form and call python
 $(function () {
 
     var submit_form = function (e) {
 
         var destination = $('input[name="destination"]').val()
-        var latlong;
+            //var latlong;
         console.log(destination)
-        geocoder.geocode({
-            'address': destination
-        }, function (results, status) {
-            if (status == 'OK') {
-                console.log(results)
-                    //map.setCenter(results[0].geometry.location);
-                map.fitBounds(results[0].geometry.viewport);
-                var marker = new google.maps.Marker({
-                    map: map,
-                    position: results[0].geometry.location
+
+        geocode(destination).then(function (response) {
+            //            console.log("Success!", response);
+            map.fitBounds(response.geometry.viewport);
+            var marker = new google.maps.Marker({
+                map: map,
+                position: response.geometry.location
+            });
+            return response.geometry.location;
+        }, function (error) {
+            alert('Geocode not successful: ' + status);
+        }).then(function (latlong) {
+            console.log(JSON.stringify(latlong.toJSON()));
+            $.getJSON('http://127.0.0.1:5000/calculate', {
+                    // FIXME still None
+                    destination: JSON.stringify(latlong.toJSON()),
+                    date: $('input[name="date"]').val()
+
+                },
+                function (data) {
+                    console.log(data.result);
+                    //$('#result').text(data.result);
+                    $('input[name=destination]').focus().select();
+                    //alert(data.result);
+                    drawChart();
                 });
-                latlong = results[0].geometry.location;
-            } else {
-                alert('Geocode not successful: ' + status)
-            }
         });
 
-        $.getJSON('http://127.0.0.1:5000/calculate', {
-            destination: destination,
-            date: $('input[name="date"]').val()
-
-        }, function (data) {
-            console.log(data.result);
-            //$('#result').text(data.result);
-            $('input[name=destination]').focus().select();
-            //alert(data.result);
-            drawChart();
-        });
         return false;
     };
 
