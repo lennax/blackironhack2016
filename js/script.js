@@ -104,11 +104,10 @@ $(function () {
     var submit_form = function (e) {
 
         var destination = $('input[name="destination"]').val()
-            //var latlong;
-        console.log(destination)
+            //console.log(destination)
 
         geocode(destination).then(function (response) {
-            //            console.log("Success!", response);
+            //console.log("Success!", response);
             map.fitBounds(response.geometry.viewport);
             var marker = new google.maps.Marker({
                 map: map,
@@ -118,12 +117,12 @@ $(function () {
         }, function (error) {
             alert('Geocode not successful: ' + status);
         }).then(function (latlong) {
-            console.log(JSON.stringify(latlong.toJSON()));
+            //console.log(JSON.stringify(latlong.toJSON()));
             $.getJSON('http://127.0.0.1:5000/calculate', {
-                    // FIXME still None
-                    destination: JSON.stringify(latlong.toJSON()),
+                    // XXX still using zip code
+                    //destination: JSON.stringify(latlong.toJSON()),
+                    destination: destination,
                     date: $('input[name="date"]').val()
-
                 },
                 function (data) {
                     console.log(data.result);
@@ -131,6 +130,8 @@ $(function () {
                     $('input[name=destination]').focus().select();
                     //alert(data.result);
                     drawChart();
+                    console.log(data.result.text)
+                    $('input#submit').parent().after("<p>" + data.result.text + "</p>");
                 });
         });
 
