@@ -6,9 +6,9 @@ Copyright 2016 Lenna X. Peterson
 // Nav tabs
 $('#myNavTabs a').click(function (e) {
     //console.log("click");
-    e.preventDefault()
-    $(this).tab('show')
-})
+    e.preventDefault();
+    $(this).tab('show');
+});
 
 // Date picker
 $(function () {
@@ -22,11 +22,11 @@ $(function () {
     });
 });
 
-// Gauge
+// Gauge function
 google.charts.load('current', {
     'packages': ['gauge']
 });
-google.charts.setOnLoadCallback(drawChart);
+//google.charts.setOnLoadCallback(drawChart);
 
 function drawChart() {
 
@@ -87,6 +87,8 @@ $(function () {
             console.log(data.result);
             //$('#result').text(data.result);
             $('input[name=destination]').focus().select();
+            //alert(data.result);
+            drawChart();
         });
         return false;
     };
@@ -100,4 +102,7 @@ $(function () {
     });
 
     $('input[name=destination]').focus();
+
+
+
 });
