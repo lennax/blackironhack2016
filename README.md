@@ -40,8 +40,8 @@ The website shows the destination on a map and estimates the disease risk on tha
 <!--* Statistics about vector-born zoonotic diseases from *Data.gov* will be used to list possible infections in the area-->
 
 * Map View
-    1. y The map will be centered on the travel destination
-    2. y The map will have a marker for the travel destination
+    1. Y The map is centered on the travel destination
+    2. Y The map has a marker for the travel destination
     3. y The map will have a label for the travel destination
     4. y The map will have an InfoWindow
     5. y The map will have visual indicators of heat, precipitation, and population density
