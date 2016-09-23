@@ -1,48 +1,82 @@
-Readme Introduction
+README
+======
 
-This is a guide for how to set up your readme for you IronHack Application
+Travel Risk Evaluation
+----------------------
 
-1. Name of your Application
+Copyright 2016 Lenna X. Peterson
 
-2. Keywords
-You should include at least 3 keywords for your project to identify the features of your project, such as: freshness, price, transportation convenience
+https://www.github.com/lennax
 
-3. Description of the datasets and function design
- * [name] [link] [data type] [data columns used] [data amount] Please provide a name+link+basicInfo to each dataset you have used.
- * [Y/N] Do you use the primary dataset ”online climate data” from data.gov? 
- * [Y/N] [List] Are all these datasets from data.gov? If not, where are they coming from (links)?
+arklenna@gmail.com
 
-4. Brief Description
+Keywords
+--------
+* travel
+* relative risk
+* vector-borne zoonotic disease
 
- * Use a paragraph to introduce your project.
+Datasets
+--------
+* NOAA 1981-2010 Climate Normals 
+    - ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/products/temperature/mly-cldd-base57.txt
+    - Monthly cooling degree day data
+    - The month column corresponding to the date of travel will be used
+    - Data is available for the entire US
 
- Fill in the structued description:
- * Map View:
-	1. [Y/N] Basic Map with specific location (your map is located in a meaningful place, city of west lafayette for example)
-	2. [Y/N] Markers for location of markets
-	3. [Y/N] Labels for markets' names
-	4. [Y/N] InfoWindow to show detail information of a market
-	5. [Y/N] [describe] Any other cover on the map (for example, cloud cover to show the weather effect)
+* Y The primary dataset "online climate data" from data.gov is used
 
- * Data Visualization:
-	1. [Y/N] [describe] Use Graph? What is the type? (bar chart, pie chart, radar chart ...)
-	2. [Y/N] [List] Any interaction available on the graph? List them (enable click on numbers, drag on lines, change time/variables ...)
-	
- * Interaction Form:
-	1. [Y/N] [List] Any information output? list them. (text field, text area, label, plain HTML ...)
-	2. [Y/N] [List] Any operation option (filters)? List them. (search markets, search vegetables, filter based on price, sort based on convenience ...)
-	3. [Y/N] [List] Any information input? List them. (comments, markers, user preference ...)
-	4. [Y/N] [List] Interaction with Map? List them. (filter on price will affect map markers, sort on price will affect map markers, ...)
-	5. [Y/N] [List] Interaction with data visualization? List them. (filter, sort, set variables ...)
+* Y All datasets used are from data.gov
 
-5. Build Case
-How can we build and access your project on a Linux/Unix machine if you use external dependencies besides HTML/CSS/Javascript?
-List the dependencies you used, such as python, node.js, etc.
-List the steps we should follow to build the project.
-Your project will be built on Amazon Web Service, EC2, ubuntu 14.01 instance
+Description
+-----------
+This website provides travelers with information and context about the risk of contracting a vector-born zoonotic disease while traveling within the United States.
+The user provides their destination and date of travel.
+The website shows the destination on a map and estimates the disease risk on that date.
+<!--The website will use data in the following ways:-->
 
-6. Test Case
-Which browsers did you test your project on? Chrome, IE, Edge, Safari, or Firefox?
+<!--* Weather data from *Open Climate* will be used to estimate mosquito population; mosquito population has a positive correlation with risk-->
+<!--* Population density of the area from *Data.gov* has a positive correlation with risk-->
+<!--* Statistics about vector-born zoonotic diseases from *Data.gov* will be used to list possible infections in the area-->
 
-7. Additional information You Want to Share with Us
-E.g. any problems you faced/fixed, where you reached out to for help, etc.
+* Map View
+    1. y The map will be centered on the travel destination
+    2. y The map will have a marker for the travel destination
+    3. y The map will have a label for the travel destination
+    4. y The map will have an InfoWindow
+    5. y The map will have visual indicators of heat, precipitation, and population density
+
+* Data Visualization
+    1. Y The page uses a Google Charts gauge to show estimated risk
+    2. N The gauge is not interactive (may add interactive chart of multiple risk factors)
+
+* Interaction Form
+    1. y Information about climate, mosquito activity, and risk will be output
+    2. y The user will be able to change the date and destination of travel to see how risk is changed
+    3. Y The user inputs their date of travel and destination
+    4. y If the user changes the date and destination of travel, the map will be updated based on the climate and location
+    5. y If the user changes the date and destination of travel, the gauge will be updated based on the risk
+
+Build Case
+----------
+* Dependencies
+    - python
+    - flask
+    - flask-cors
+
+* Building
+    sudo apt-get install python python-flask python-pip
+    sudo pip install flask-cors
+
+* Usage
+    1. Start the flask server with `python server.py`
+    2. Open 'index.html' in Google Chrome
+    3. Enter data into the form and click 'Submit'
+
+Testing
+-------
+This website was tested on Ubuntu 14.04 using Google Chrome version 53.0.2785.116
+
+Additional Information
+----------------------
+In the description section, items marked with an uppercase Y are functional while items marked with a lowercase y have not been implemented.
