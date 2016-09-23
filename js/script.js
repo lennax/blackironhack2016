@@ -1,99 +1,103 @@
 /**
-2015-09-07 by Charles Song
-This is the javascript file for the radar chart。 We can define the content of the chart here. We can also defind the numbers by accessing external links and resources such as JSON files.
+Copyright 2016 Lenna X. Peterson
 **/
 
 
-//create a new httprequest for this session
-var xmlhttp = new XMLHttpRequest();
-//json format data resource url 
-var url = "http://api.openweathermap.org/data/2.5/weather?q=chicago&appid=6aa0bdb1f586c5630d60b6237dfce45c";
-xmlhttp.open("GET", url, true);
-xmlhttp.send();
+// Nav tabs
+$('#myNavTabs a').click(function (e) {
+    //console.log("click");
+    e.preventDefault()
+    $(this).tab('show')
+})
 
-//once the request is accepted, process the fowllowing function to get data and complete the app information
-xmlhttp.onreadystatechange = function() {
-    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-        var myArr = xmlhttp.responseText;
-        var text = myArr;
-        var json = JSON.parse(text);
-        //alert(JSON.parse(text).coord.lon);
-        //document.getElementById("id01").innerHTML = myArr;
-    
-        document.getElementById("weather").innerHTML = "Today the weather is <em><b>" + json.weather[0].main + "</b></em>";
-		//
-		//variables for the title
-		//
+// Date picker
+$(function () {
+    $("#datepicker").datepicker({
+        minDate: 0,
+        changeMonth: true,
+        changeYear: true
+    });
+    $("#anim").on("change", function () {
+        $("#datepicker").datepicker("option", "showAnim", $(this).val());
+    });
+});
 
-		//initiate the title
-		var svg = d3.select('#body')
-			.selectAll('svg')
-			.append('svg')
-			.attr("width", cfg.w+300)
-			.attr("height", cfg.h)
+// Gauge
+google.charts.load('current', {
+    'packages': ['gauge']
+});
+google.charts.setOnLoadCallback(drawChart);
 
+function drawChart() {
 
-		//variables for creating colour squares
-		var colorscale = d3.scale.category10();
+    var data = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['Risk', 10]
+        ]);
 
-		//titles
-		var titleOptions = ['Final Scores'];
-		var text = svg.append("text")
-			.attr("class", "title")
-			.attr('transform', 'translate(90,0)') 
-			.attr("x", cfg.w-70)
-			.attr("y", 10)
-			.attr("font-size", "12px")
-			.attr("fill", "#404040")
-			.text("Find your best place to get food!");
-				
-		//Initiate title	
-		var title = svg.append("g")
-			.attr("class", "title")
-			.attr("height", 100)
-			.attr("width", 200)
-			.attr('transform', 'translate(90,20)') 
-			;
-			//Create colour squares
-			title.selectAll('rect')
-			  .data(titleOptions)
-			  .enter()
-			  .append("rect")
-			  .attr("x", cfg.w - 65)
-			  .attr("y", function(d, i){ return i * 20;})
-			  .attr("width", 10)
-			  .attr("height", 10)
-			  .style("fill", function(d, i){ return colorscale(i);})
-			  ;
-			//Create text next to squares
-			title.selectAll('text')
-			  .data(titleOptions)
-			  .enter()
-			  .append("text")
-			  .attr("x", cfg.w - 52)
-			  .attr("y", function(d, i){ return i * 20 + 9;})
-			  .attr("font-size", "13px")
-			  .attr("fill", "#737373")
-			  .text(function(d) { return d; })
-			  ;	
+    var options = {
+        width: 120,
+        height: 120,
+        redFrom: 90,
+        redTo: 100,
+        yellowFrom: 75,
+        yellowTo: 90,
+        majorTicks: 3,
+        minorTicks: 3
+    };
 
-		// those are functions for calculating scores for each store
+    var chart = new google.visualization.Gauge(document.getElementById('gauge'));
 
+    chart.draw(data, options);
 
-    }
-};
-
-//show the request function in the text format
-function myRequestFunction(arr) {
-    var out = "";
-    var i;
-    for(i = 0; i < arr.length; i++) {
-        out += '<a href="' + arr[i].url + '">' + 
-        arr[i].display + '</a><br>';
-    }
-    document.getElementById("id01").innerHTML = out;
+    // setInterval(function () { // data.setValue(0, 1, 40 + Math.round(60 * Math.random())); // chart.draw(data, options); // }, 13000);
 }
 
+// map
+$(function () {
+
+    function initMap() {
+
+        var location = new google.maps.LatLng(40.4237, -86.9212);
+
+        var mapCanvas = document.getElementById('map');
+        var mapOptions = {
+            center: location,
+            zoom: 12,
+            //            panControl: false,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        }
+        var map = new google.maps.Map(mapCanvas, mapOptions);
+
+    }
+
+    google.maps.event.addDomListener(window, 'load', initMap);
 
 
+});
 
+// Process form and call python
+$(function () {
+    var submit_form = function (e) {
+        $.getJSON('http://127.0.0.1:5000/calculate', {
+            destination: $('input[name="destination"]').val(),
+            date: $('input[name="date"]').val()
+
+        }, function (data) {
+            console.log(data.result);
+            //$('#result').text(data.result);
+            $('input[name=destination]').focus().select();
+        });
+        return false;
+    };
+
+    $('input#submit').bind('click', submit_form);
+
+    $('input[type=text]').bind('keydown', function (e) {
+        if (e.keyCode == 13) {
+            submit_form(e);
+        }
+    });
+
+    $('input[name=destination]').focus();
+});
