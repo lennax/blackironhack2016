@@ -2,6 +2,8 @@
 Copyright 2016 Lenna X. Peterson
 **/
 
+"use strict";
+
 
 // Nav tabs
 $('#myNavTabs a').click(function (e) {
@@ -54,7 +56,10 @@ function drawChart() {
 }
 
 // map
+var map;
+var geocoder;
 $(function () {
+    geocoder = new google.maps.Geocoder();
 
     function initMap() {
 
@@ -68,7 +73,7 @@ $(function () {
             //            panControl: false,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         }
-        var map = new google.maps.Map(mapCanvas, mapOptions);
+        map = new google.maps.Map(mapCanvas, mapOptions);
 
     }
 
@@ -79,9 +84,31 @@ $(function () {
 
 // Process form and call python
 $(function () {
+
     var submit_form = function (e) {
+
+        var destination = $('input[name="destination"]').val()
+        var latlong;
+        console.log(destination)
+        geocoder.geocode({
+            'address': destination
+        }, function (results, status) {
+            if (status == 'OK') {
+                console.log(results)
+                    //map.setCenter(results[0].geometry.location);
+                map.fitBounds(results[0].geometry.viewport);
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: results[0].geometry.location
+                });
+                latlong = results[0].geometry.location;
+            } else {
+                alert('Geocode not successful: ' + status)
+            }
+        });
+
         $.getJSON('http://127.0.0.1:5000/calculate', {
-            destination: $('input[name="destination"]').val(),
+            destination: destination,
             date: $('input[name="date"]').val()
 
         }, function (data) {
