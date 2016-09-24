@@ -22,9 +22,9 @@ app.debug = True
 open_climate_ftp = "ftp.ncdc.noaa.gov"
 #"/pub/data/normals/1981-2010/"
 
-#@app.route('/')
-#def index():
-#    return render_template('index2.html')
+@app.route('/')
+def index():
+   return render_template('index.html')
 
 @app.route('/calculate', methods=['GET', 'OPTIONS'])
 def calculate():
