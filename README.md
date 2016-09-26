@@ -70,7 +70,7 @@ Build Case
 
 * Usage
     1. Start the flask server with `python server.py`
-    2. Open 'index.html' in Google Chrome
+    2. Open Google Chrome and go to 127.0.0.1:5000
     3. Enter data into the form and click 'Submit'
 
 Testing
