@@ -2,11 +2,9 @@
 Copyright 2016 Lenna X. Peterson
 **/
 
-"use strict";
-
-
 // Nav tabs
 $('#myNavTabs a').click(function (e) {
+    "use strict";
     //console.log("click");
     e.preventDefault();
     $(this).tab('show');
@@ -14,6 +12,7 @@ $('#myNavTabs a').click(function (e) {
 
 // Date picker
 $(function () {
+    "use strict";
     $("#datepicker").datepicker({
         minDate: 0,
         changeMonth: true,
@@ -31,6 +30,7 @@ google.charts.load('current', {
 //google.charts.setOnLoadCallback(drawChart);
 
 function drawChart(risk) {
+    "use strict";
 
     var data = google.visualization.arrayToDataTable([
           ['Label', 'Value'],
@@ -58,6 +58,7 @@ function drawChart(risk) {
 // map
 var map;
 $(function () {
+    "use strict";
 
     function initMap() {
 
@@ -84,6 +85,7 @@ $(function () {
 var geocoder = new google.maps.Geocoder();
 
 function geocode(address) {
+    "use strict";
     // Return a new promise.
     return new Promise(function (resolve, reject) {
         geocoder.geocode({
@@ -100,9 +102,11 @@ function geocode(address) {
 
 // Process form and call python
 $(function () {
+    "use strict";
 
     var submit_form = function (e) {
 
+        // TODO do light client side input validation
         var destination = $('input[name="destination"]').val();
         //console.log(destination)
 
@@ -117,13 +121,11 @@ $(function () {
         }, function (error) {
             alert('Geocode not successful: ' + status);
         }).then(function (response) {
-            //console.log(JSON.stringify(latlong.toJSON()));
             // TODO determine how to parse address_components
             console.log(response.address_components);
             $.getJSON('http://127.0.0.1:5000/calculate', {
-                    // XXX still using zip code
-                    //destination: JSON.stringify(response.geometry.latlong.toJSON()),
-                    destination: destination,
+                    lat: response.geometry.location.lat(),
+                    lng: response.geometry.location.lng(),
                     date: $('input[name="date"]').val()
                 },
                 function (data) {
