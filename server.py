@@ -8,7 +8,7 @@ import json
 import urllib
 
 # 3RD PARTY LIBRARIES
-#import numpy
+import numpy
 
 from flask import Flask, jsonify, render_template, request, make_response, current_app
 # from flask_cors import CORS, cross_origin
@@ -120,7 +120,8 @@ def calculate():
 #    index, wind chill, and air temperature normals and standard deviations. 
 #    e.g., "703" is 70.3F
     tavg_row = get_row("products/temperature/mly-tavg-normal.txt")
-    jan_temp = int(tavg_row.split()[1][:-1]) * 0.1
+    tavg_ints = [int(v[:-1]) * 0.1 for v in tavg_row.split()[1:]]
+    jan_temp = tavg_ints[0]
     temp_risk = bool(jan_temp > 23.0)
     
     # Aedes albopictus requires a minimum annual rainfall of ~250 mm (9.8 inches)
@@ -133,25 +134,50 @@ def calculate():
     
     if temp_risk and rain_risk:
     
+        # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3700474/
+        # roughly 100 degree days for Culex 
         # Cooling degree days are equivalent to growing degree days
         cooling_result = get_row("products/temperature/mly-cldd-base57.txt")
     #    print cooling_result
         cooling_list = cooling_result.split()
-        cooling_value = int(cooling_list[month_number][:-1])
+        cooling_ints = [int(v[:-1]) if v[0] != "-" else 0 for v in cooling_list[1:]]
+        cumulative_cdd = numpy.cumsum(cooling_ints)
+        print cumulative_cdd
+        cooling_value = cumulative_cdd[month_number - 1]
+        
+        cooling_text = "mosquitoes have likely not yet hatched"
+        if cooling_value > 100:
+            cooling_text = "mosquitoes have likely hatched"
+    
+            # tmin 9.6 C (49.28 F)
+            # tmax 37 C (98.6 F)
+            # TODO convert to quadratic
+            month_temp = tavg_ints[month_number - 1]
+
+            conjunction = "and"
+            temp_text = "it is the right temperature for mosquitoes"
+            if month_temp < 49.28:
+                conjunction = "but"
+                temp_text = "it is too cold for mosquitoes"
+            elif month_temp > 98.6:
+                conjunction = "but"
+                temp_text = "it is too hot for mosquitoes"
+            
+            cooling_text = " ".join([cooling_text, conjunction, temp_text])
 
     #    hundredths of inches for average monthly/seasonal/annual precipitation, 
     #    month-to-date/year-to-date precipitation, and percentiles of precipitation. 
     #    e.g., "1" is 0.01" and "1486" is 14.86"
-        precip_result = get_row("products/precipitation/mly-prcp-normal.txt")
-    #    print precip_result
-        precip_list = precip_result.split()
-        precip_value = int(precip_list[month_number][:-1]) * 0.01
+#        precip_result = get_row("products/precipitation/mly-prcp-normal.txt")
+#    #    print precip_result
+#        precip_list = precip_result.split()
+#        precip_value = int(precip_list[month_number][:-1]) * 0.01
         
     # TODO determine amount of degree days and precipitation needed for mosquitoes
         
-        result_text = "The climate at your destination is hospitable to mosquitoes. {month_name} normally has {0} cooling degree days and {1} inches of rain.".format(cooling_value, precip_value, month_name=month_name)
+        result_text = "The climate at your destination is hospitable to mosquitoes. In {month_name}, {cooling_text}.".format(cooling_text=cooling_text,month_name=month_name)
         
-    # TODO compute some sort of risk
+        # TODO compute some sort of risk
         risk = 15
     
     else:
