@@ -20,7 +20,7 @@
     <link rel='stylesheet' href='static/style.css' type='text/css'>
 
     <script type="text/javascript">
-var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+        var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     </script>
 
 </head>
@@ -87,9 +87,19 @@ var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
                 </div>
             </div>
             <div role="tabpanel" class="tab-pane fade" id="about">
-                <h1>About</h1></div>
+                <h1>About</h1>
+                
+                <h2>References</h2>
+                <div class="references">
+                    <p>Waldock, J., Chandra, N. L., Lelieveld, J., Proestos, Y., Michael, E., Christophides, G., &amp; Parham, P. E. (2013). The role of environmental variables on Aedes albopictus biology and chikungunya epidemiology. Pathogens and Global Health, 107(5), 224–241. <a href="http://doi.org/10.1179/2047773213Y.0000000100">http://doi.org/10.1179/2047773213Y.0000000100</a></p>
+                </div>
+
+            </div>
             <div role="tabpanel" class="tab-pane fade" id="contact">
-                <h1>Contact</h1></div>
+                <h1>Contact</h1>
+                <p>Copyright 2016 Lenna X. Peterson</p>
+                <p><a href="http://www.github.com/lennax">github.com/lennax</a></p>
+            </div>
         </div>
     </div>
 
