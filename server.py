@@ -140,10 +140,13 @@ def calculate():
     
     result_text = "At your destination, {month_name} normally has {0} cooling degree days and {1} inches of rain".format(cooling_value, precip_value * 0.01, month_name=month_name)
     
-    result_dict = dict(text=result_text,
-                       risk="low")
-    
     # TODO determine amount of degree days and precipitation needed for mosquitoes
+    
+    # TODO compute some sort of risk
+    risk = 15
+    
+    result_dict = dict(text=result_text,
+                       risk=risk)
     
     return jsonify(result=result_dict)
 
