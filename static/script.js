@@ -70,7 +70,7 @@ $(function () {
             zoom: 3,
             //            panControl: false,
             mapTypeId: google.maps.MapTypeId.ROADMAP
-        }
+        };
         map = new google.maps.Map(mapCanvas, mapOptions);
 
     }
@@ -103,8 +103,8 @@ $(function () {
 
     var submit_form = function (e) {
 
-        var destination = $('input[name="destination"]').val()
-            //console.log(destination)
+        var destination = $('input[name="destination"]').val();
+        //console.log(destination)
 
         geocode(destination).then(function (response) {
             //console.log("Success!", response);
@@ -132,7 +132,8 @@ $(function () {
                     $('input[name=destination]').focus().select();
                     //alert(data.result);
                     drawChart(data.result.risk);
-                    console.log(data.result.text)
+                    //console.log(data.result.text)
+                    // TODO fix behavior on second search
                     $('input#submit').parent().after("<p>" + data.result.text + "</p>");
                 });
         });

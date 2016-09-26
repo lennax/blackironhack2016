@@ -1,9 +1,14 @@
 body {
-      padding-top: 50px;
-  }
+    padding-top: 50px;
+}
 
 #map {
     width: 100%;
     height: 400px;
     background-color: grey;
+}
+
+.references p {
+    padding-left: 22px;
+    text-indent: -22px;
 }
