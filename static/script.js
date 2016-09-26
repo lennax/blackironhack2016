@@ -30,11 +30,11 @@ google.charts.load('current', {
 });
 //google.charts.setOnLoadCallback(drawChart);
 
-function drawChart() {
+function drawChart(risk) {
 
     var data = google.visualization.arrayToDataTable([
           ['Label', 'Value'],
-          ['Risk', 10]
+          ['Risk', risk]
         ]);
 
     var options = {
@@ -113,14 +113,16 @@ $(function () {
                 map: map,
                 position: response.geometry.location
             });
-            return response.geometry.location;
+            return response;
         }, function (error) {
             alert('Geocode not successful: ' + status);
-        }).then(function (latlong) {
+        }).then(function (response) {
             //console.log(JSON.stringify(latlong.toJSON()));
+            // TODO determine how to parse address_components
+            console.log(response.address_components);
             $.getJSON('http://127.0.0.1:5000/calculate', {
                     // XXX still using zip code
-                    //destination: JSON.stringify(latlong.toJSON()),
+                    //destination: JSON.stringify(response.geometry.latlong.toJSON()),
                     destination: destination,
                     date: $('input[name="date"]').val()
                 },
@@ -129,7 +131,7 @@ $(function () {
                     //$('#result').text(data.result);
                     $('input[name=destination]').focus().select();
                     //alert(data.result);
-                    drawChart();
+                    drawChart(data.result.risk);
                     console.log(data.result.text)
                     $('input#submit').parent().after("<p>" + data.result.text + "</p>");
                 });
