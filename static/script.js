@@ -16,7 +16,11 @@ $(function () {
     $("#datepicker").datepicker({
         minDate: 0,
         changeMonth: true,
-        changeYear: true
+        changeYear: true,
+        showOn: "both",
+        buttonImage: "static/calendar.gif",
+        buttonImageOnly: true,
+        buttonText: "Select date"
     });
     $("#anim").on("change", function () {
         $("#datepicker").datepicker("option", "showAnim", $(this).val());
