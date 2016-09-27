@@ -147,6 +147,9 @@ def calculate():
                 return line
 
     #ftp.retrlines("RETR products/auxiliary/station/{0}-normals.txt".format(stationid))
+    
+    temp_risk = None
+    rain_risk = None
 
     # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4001452/
     # Aedes albopictus is not expected to survive average January temperatures of -5 C (23 F)
@@ -154,31 +157,35 @@ def calculate():
 #    index, wind chill, and air temperature normals and standard deviations.
 #    e.g., "703" is 70.3F
     tavg_row = get_row("products/temperature/mly-tavg-normal.txt")
-    tavg_ints = [int(v[:-1]) * 0.1 for v in tavg_row.split()[1:]]
-    jan_temp = tavg_ints[0]
-    temp_risk = bool(jan_temp > 23.0)
+    if tavg_row is not None:
+        tavg_ints = [int(v[:-1]) * 0.1 for v in tavg_row.split()[1:]]
+        jan_temp = tavg_ints[0]
+        temp_risk = bool(jan_temp > 23.0)
 
     # Aedes albopictus requires a minimum annual rainfall of ~250 mm (9.8 inches)
 #    tenths of inches for average monthly/seasonal/annual snowfall,
 #    month-to-date/year-to-date snowfall, and percentiles of snowfall.
 #    e.g. "39" is 3.9"
     rain_row = get_row("products/precipitation/ann-prcp-normal.txt")
-    rain_in = int(rain_row.split()[1][:-1]) * 0.1
-    rain_risk = bool(rain_in >= 9.8)
+    if rain_row is not None:
+        rain_in = int(rain_row.split()[1][:-1]) * 0.1
+        rain_risk = bool(rain_in >= 9.8)
 
     if temp_risk and rain_risk:
 
+        cooling_value = None
         # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3700474/
         # roughly 100 degree days for Culex
         # Cooling degree days are equivalent to growing degree days
         cooling_result = get_row("products/temperature/mly-cldd-base57.txt")
-    #    print cooling_result
-        cooling_list = cooling_result.split()
-        cooling_ints = [int(v[:-1]) if v[0] !=
-                        "-" else 0 for v in cooling_list[1:]]
-        cumulative_cdd = np.cumsum(cooling_ints)
-        print cumulative_cdd
-        cooling_value = cumulative_cdd[month_number - 1]
+        #    print cooling_result
+        if cooling_result is not None:
+            cooling_list = cooling_result.split()
+            cooling_ints = [int(v[:-1]) if v[0] !=
+                            "-" else 0 for v in cooling_list[1:]]
+            cumulative_cdd = np.cumsum(cooling_ints)
+            print cumulative_cdd
+            cooling_value = cumulative_cdd[month_number - 1]
 
         cooling_text = "mosquitoes have likely not yet hatched"
         if cooling_value > 100:
