@@ -134,13 +134,11 @@ $(function () {
                 },
                 function (data) {
                     console.log(data.result);
-                    //$('#result').text(data.result);
                     $('input[name=destination]').focus().select();
                     //alert(data.result);
                     drawChart(data.result.risk);
                     //console.log(data.result.text)
-                    // TODO fix behavior on second search
-                    $('input#submit').parent().after("<p>" + data.result.text + "</p>");
+                    $('#result').text(data.result.text);
                 });
         });
 
