@@ -57,21 +57,27 @@
                 <h1>Travel information</h1>
                 <p class="lead">Where are you going?</p>
                 <div class="row">
-                    <div class="col-md-3">
-                        <form>
-                            <p>Destination:
-                                <input type=text size="25" name="destination" placeholder='e.g. "60613" or "Chicago, IL"' required>
-                            </p>
-                            <p>Date of travel:
-                                <input type="text" id="datepicker" size="10" name="date" required>
-                            </p>
-                            <p>
-                                <input type="submit" id="submit">
-                            </p>
-                        </form>
-                    </div>
-                    <div class="col-md-3">
-                        <div id="gauge" style="min-width: 310px; max-width: 400px; height: 300px; margin: 0 auto"></div>
+                    <div class="col-md-6">
+                        <div class="col-md-6">
+                            <form>
+                                <p>Destination:
+                                    <input type=text size="25" name="destination" placeholder='e.g. "60613" or "Chicago, IL"' required>
+                                </p>
+                                <p>Date of travel:
+                                    <input type="text" id="datepicker" size="10" name="date" required>
+                                </p>
+                                <p>
+                                    <input type="submit" id="submit">
+                                </p>
+                            </form>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div id="gauge" style="min-width: 310px; max-width: 400px; height: 300px; margin: 0 auto"></div>
+                            </div>
+                            <div class="col-md-3" id="result">
+                            </div>
+                        </div>                    
                     </div>
                     <div class="col-md-6">
                         <div id="map">Right panel</div>
