@@ -5,6 +5,7 @@ import datetime
 from functools import update_wrapper
 from ftplib import FTP
 import json
+import logging
 import urllib
 
 # 3RD PARTY LIBRARIES
@@ -15,7 +16,15 @@ from flask import Flask, jsonify, render_template, request, make_response, curre
 from flask.ext.cors import CORS, cross_origin
 app = Flask(__name__)
 CORS(app)
-app.debug = True
+#app.debug = True
+
+# Only use the FileHandler from gunicorn.error logger
+gunicorn_error_handlers = logging.getLogger('gunicorn.error').handlers
+app.logger.handlers.extend(gunicorn_error_handlers )
+#app.logger.addHandler(myhandler1)
+#app.logger.addHandler(myhandler2)
+app.logger.info('my info')
+app.logger.debug('debug message')
 
 ####
 
@@ -39,7 +48,8 @@ def calculate():
 #    print destination
 
     latlng = (lat, lng)
-    print latlng
+    #print latlng
+    app.logger.debug(latlng)
 
     # parse date
     datefmt = "%m/%d/%Y"
@@ -105,7 +115,8 @@ def calculate():
     closest_row = station_list[closest_index]
     stationid = closest_row.split()[0]
 
-    print stationid
+    #print stationid
+    app.logger.debug(stationid)
 
     # TODO Get month data for that weather station
 #        1. Long-term averages of monthly precipitation totals:
@@ -184,7 +195,8 @@ def calculate():
             cooling_ints = [int(v[:-1]) if v[0] !=
                             "-" else 0 for v in cooling_list[1:]]
             cumulative_cdd = np.cumsum(cooling_ints)
-            print cumulative_cdd
+            #print cumulative_cdd
+            app.logger.debug(cumulative_cdd)
             cooling_value = cumulative_cdd[month_number - 1]
 
         cooling_text = "mosquitoes have likely not yet hatched"
