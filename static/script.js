@@ -127,7 +127,7 @@ $(function () {
         }).then(function (response) {
             // TODO determine how to parse address_components
             console.log(response.address_components);
-            $.getJSON('http://127.0.0.1:5000/calculate', {
+            $.getJSON($SCRIPT_ROOT + '/calculate', {
                     lat: response.geometry.location.lat(),
                     lng: response.geometry.location.lng(),
                     date: $('input[name="date"]').val()
