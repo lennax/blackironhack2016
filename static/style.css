@@ -12,3 +12,7 @@ body {
     padding-left: 22px;
     text-indent: -22px;
 }
+
+.disabled {
+    opacity: 0.2;
+}

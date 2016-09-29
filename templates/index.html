@@ -59,10 +59,10 @@
                         <div class="col-md-12">
                             <form>
                                 <p>Destination:
-                                    <input type=text size="25" name="destination" placeholder='e.g. "60613" or "Chicago, IL"' required>
+                                    <input type=text id="destination" size="25" name="destination" title="Destination address" placeholder='e.g. "60613" or "Chicago, IL"' required>
                                 </p>
                                 <p>Date of travel:
-                                    <input type="text" id="datepicker" size="10" name="date" placeholder="MM/DD/YYYY" required>
+                                    <input type="date" size="10" name="date" title="Date" pattern="^\d{2}/\d{2}/\d{4}$" placeholder="MM/DD/YYYY" required>
                                 </p>
                                 <p>
                                     <input type="submit" id="submit">

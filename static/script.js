@@ -10,21 +10,37 @@ $('#myNavTabs a').click(function (e) {
     $(this).tab('show');
 });
 
-// Date picker
+// Client-side input validation
 $(function () {
     "use strict";
-    $("#datepicker").datepicker({
-        minDate: 0,
-        changeMonth: true,
-        changeYear: true,
-        showOn: "both",
-        buttonImage: "static/calendar.gif",
-        buttonImageOnly: true,
-        buttonText: "Select date"
-    });
-    $("#anim").on("change", function () {
-        $("#datepicker").datepicker("option", "showAnim", $(this).val());
-    });
+    
+    function disableSubmit() {
+        // Disable submit
+        $('#submit').attr("disabled", "disabled"
+                         ).addClass("disabled"
+                                   ).attr("title", "Please fill out required values");
+    };
+    
+    disableSubmit();
+    
+    function checkSubmit(e) {
+        var destinationLen = $('input[name="destination"]').val().length
+        var dateVal = $('input[name="date"]').val()
+        console.log(destinationLen, destinationLen > 0);
+        console.log(dateVal);
+        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
+        if (destinationLen > 0 && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+            $('#submit').removeAttr("disabled"
+                                   ).removeClass("disabled"
+                                                ).attr("title", "Submit form")
+        } else {
+            disableSubmit();
+        }
+    }
+    
+    $('input[name="destination"]').on('keyup textinput', checkSubmit);
+    $('input[name="date"]').on('change', checkSubmit);
+    
 });
 
 // Gauge function
@@ -110,7 +126,6 @@ $(function () {
 
     var submit_form = function (e) {
 
-        // TODO do light client side input validation
         var destination = $('input[name="destination"]').val();
         //console.log(destination)
 
@@ -133,12 +148,16 @@ $(function () {
                     date: $('input[name="date"]').val()
                 },
                 function (data) {
-                    console.log(data.result);
-                    $('input[name=destination]').focus().select();
-                    //alert(data.result);
-                    drawChart(data.result.risk);
-                    //console.log(data.result.text)
-                    $('#result').text(data.result.text);
+                    if (data.result.error != 0) {
+                        $('#result').text("Error: " + data.result.error);
+                    } else {
+                        console.log(data.result);
+                        $('input[name=destination]').focus().select();
+                        //alert(data.result);
+                        drawChart(data.result.risk);
+                        //console.log(data.result.text)
+                        $('#result').text(data.result.text);
+                    }
                 });
         });
 
