@@ -46,14 +46,24 @@ def calculate():
     lng = request.args.get('lng', type=float)
     mydate = request.args.get('date')
 #    print destination
+    return jsonify(result=get_result(lat=lat,
+                                     lng=lng,
+                                     mydate=mydate))
+
+def get_result(lat, lng, mydate):
 
     latlng = (lat, lng)
     #print latlng
     app.logger.debug(latlng)
 
     # parse date
-    datefmt = "%m/%d/%Y"
-    parsed_date = datetime.datetime.strptime(mydate, datefmt)
+    #datefmt = "%m/%d/%Y"
+    datefmt = "%Y-%m-%d"
+    try:
+        parsed_date = datetime.datetime.strptime(mydate, datefmt)
+    except ValueError:
+        # Server-side input validation
+        return dict(error="Invalid date")
     month_number = parsed_date.month
     month_name = parsed_date.strftime("%B")
 
@@ -241,9 +251,10 @@ def calculate():
         risk = 1
 
     result_dict = dict(text=result_text,
-                       risk=risk)
+                       risk=risk,
+                       error=0)
 
-    return jsonify(result=result_dict)
+    return result_dict
 
 if __name__ == "__main__":
     app.run()
