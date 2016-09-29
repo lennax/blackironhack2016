@@ -21,14 +21,14 @@ $(function () {
                                    ).attr("title", "Please fill out required values");
     };
     
-    disableSubmit();
+    //disableSubmit();
     
     function checkSubmit(e) {
         var destinationLen = $('input[name="destination"]').val().length
         var dateVal = $('input[name="date"]').val()
-        console.log(destinationLen, destinationLen > 0);
-        console.log(dateVal);
-        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
+//        console.log(destinationLen, destinationLen > 0);
+//        console.log(dateVal);
+//        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
         if (destinationLen > 0 && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
             $('#submit').removeAttr("disabled"
                                    ).removeClass("disabled"
@@ -83,12 +83,14 @@ $(function () {
     function initMap() {
 
         // Geographic center of continental US
-        var location = new google.maps.LatLng(39.8282, -98.5795);
+        //var location = new google.maps.LatLng(39.8282, -98.5795);
 
+        var location = new google.maps.LatLng(40.4237, -86.9212);
+        
         var mapCanvas = document.getElementById('map');
         var mapOptions = {
             center: location,
-            zoom: 3,
+            zoom: 12,
             //            panControl: false,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
