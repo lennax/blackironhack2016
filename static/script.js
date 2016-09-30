@@ -14,16 +14,21 @@ MyApp.disableSubmit = function () {
 // Client-side input validation
 MyApp.checkSubmit = function (e) {
   "use strict";
-  var destinationLen = $('input[name="destination"]').val().length
-  var dateVal = $('input[name="date"]').val()
-    //        console.log(destinationLen, destinationLen > 0);
-    //        console.log(dateVal);
-    //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
-  if (destinationLen && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-    $('#submit').removeAttr("disabled").removeClass("disabled").attr("title", "Submit form")
+  if (MyApp.validData()) {
+    $('#submit').removeAttr("disabled").removeClass("disabled").attr("title", "Submit form");
   } else {
     MyApp.disableSubmit();
   }
+};
+
+MyApp.validData = function () {
+  "use strict";
+  var destinationLen = $('input[name="destination"]').val().length;
+  var dateVal = $('input[name="date"]').val();
+  //        console.log(destinationLen, destinationLen > 0);
+  //        console.log(dateVal);
+  //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
+  return destinationLen && /^\d{4}-\d{2}-\d{2}$/.test(dateVal);
 };
 
 MyApp.initMap = function () {
@@ -45,15 +50,15 @@ MyApp.initMap = function () {
   // Not sure if this needs to be declared outside
   MyApp.map = new google.maps.Map(mapCanvas, mapOptions);
 
-}
+};
 
 MyApp.drawChart = function (risk) {
   "use strict";
 
   var data = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Risk', risk]
-        ]);
+    ['Label', 'Value'],
+    ['Risk', risk]
+  ]);
 
   var options = {
     width: 120,
@@ -93,61 +98,65 @@ MyApp.geocode = function (address) {
 };
 
 MyApp.submitForm = function () {
+  "use strict";
 
-  var destination = $('input[name="destination"]').val();
-  //console.log(destination)
+  if (MyApp.validData()) {
 
-  MyApp.geocode(destination).then(function (response) {
-    //console.log("Success!", response);
-    MyApp.map.fitBounds(response.geometry.viewport);
-    var marker = new google.maps.Marker({
-      map: MyApp.map,
-      position: response.geometry.location
-    });
-    return response;
-  }, function (error) {
-    alert('Geocode not successful: ' + status);
-  }).then(function (response) {
-    // TODO determine how to parse address_components
-    var state;
-    //            console.log(response.address_components);
-    for (var x = 0; x < response.address_components.length; x++) {
-      var component = response.address_components[x];
-      //                console.log(component);
-      //                console.log(component.types[0]);
-      if (component.types[0] == "administrative_area_level_1") {
-        state = component.long_name
-        console.log(component.long_name)
-      }
+    var destination = $('input[name="destination"]').val();
+    //console.log(destination)
 
-    }
-    //console.log(response.address_components[2].long_name);
-    $.getJSON($SCRIPT_ROOT + '/calculate', {
-        lat: response.geometry.location.lat(),
-        lng: response.geometry.location.lng(),
-        date: $('input[name="date"]').val(),
-        state: state,
-      },
-      function (data) {
-        if (data.result.error != 0) {
-          $('#result').text("Error: " + data.result.error);
-        } else {
-          console.log(data.result);
-          $('input[name=destination]').focus().select();
-          //alert(data.result);
-          MyApp.drawChart(data.result.risk);
-          //console.log(data.result.text)
-          $('#result').text(data.result.text);
-        }
+    MyApp.geocode(destination).then(function (response) {
+      //console.log("Success!", response);
+      MyApp.map.fitBounds(response.geometry.viewport);
+      var marker = new google.maps.Marker({
+        map: MyApp.map,
+        position: response.geometry.location
       });
-  });
+      return response;
+    }, function (error) {
+      alert('Geocode not successful: ' + status);
+    }).then(function (response) {
+      // TODO determine how to parse address_components
+      var state, component;
+      //            console.log(response.address_components);
+      for (var x = 0; x < response.address_components.length; x++) {
+        component = response.address_components[x];
+        //                console.log(component);
+        //                console.log(component.types[0]);
+        if (component.types[0] == "administrative_area_level_1") {
+          state = component.long_name
+          console.log(component.long_name)
+        }
+
+      }
+      //console.log(response.address_components[2].long_name);
+      $.getJSON($SCRIPT_ROOT + '/calculate', {
+          lat: response.geometry.location.lat(),
+          lng: response.geometry.location.lng(),
+          date: $('input[name="date"]').val(),
+          state: state,
+        },
+        function (data) {
+          if (data.result.error != 0) {
+            $('#result').text("Error: " + data.result.error);
+          } else {
+            console.log(data.result);
+            $('input[name=destination]').focus().select();
+            //alert(data.result);
+            MyApp.drawChart(data.result.risk);
+            //console.log(data.result.text)
+            $('#result').text(data.result.text);
+          }
+        });
+    });
+  };
 
   return false;
 };
 
 
 // Process form and call python
-$(function () {
+$(document).ready(function () {
   "use strict";
 
   // Add functionality to nav tabs
