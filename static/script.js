@@ -117,28 +117,52 @@ MyApp.submitForm = function () {
       alert('Geocode not successful: ' + status);
     }).then(function (response) {
       // TODO determine how to parse address_components
-      var state, component;
+      var country, state, county, component;
       //            console.log(response.address_components);
       for (var x = 0; x < response.address_components.length; x++) {
         component = response.address_components[x];
-        //                console.log(component);
+        console.log(component);
         //                console.log(component.types[0]);
-        if (component.types[0] == "administrative_area_level_1") {
-          state = component.long_name
-          console.log(component.long_name)
-        }
+        //        switch(component.types[0]) {
+        //          case "country":
+        //            country = component.long_name;
+        //          case "administrative_area_level_1":
+        //            state = component.long_name;
+        //          case "administrative_area_level_2":
+        //            county = component.long_name;   
+        //        };
+        if (component.types[0] == "country") {
+          country = component.long_name;
+        } else if (component.types[0] == "administrative_area_level_1") {
+          state = component.long_name;
+        } else if (component.types[0] == "administrative_area_level_2") {
+          county = component.long_name;
+        };
+        //        if (component.types[0] == "administrative_area_level_1") {
+        //          state = component.long_name
+        //          console.log(component.long_name)
+        //        }
 
       }
+      if (country != "United States") {
+        $('#result').text("Error: data not available outside the US");
+        return 1
+      };
+      console.log(country);
+      console.log(state);
+      console.log(county);
       //console.log(response.address_components[2].long_name);
       $.getJSON($SCRIPT_ROOT + '/calculate', {
           lat: response.geometry.location.lat(),
           lng: response.geometry.location.lng(),
           date: $('input[name="date"]').val(),
           state: state,
+          county: county,
         },
         function (data) {
           if (data.result.error != 0) {
             $('#result').text("Error: " + data.result.error);
+            return 1
           } else {
             console.log(data.result);
             $('input[name=destination]').focus().select();

@@ -30,6 +30,12 @@ Datasets
     - The number of cases for the corresponding state will be used
     - Data is available for the entire US
 
+* 2015 American Community Survey Subject Tables
+    - http://api.census.gov/data/2015/acs1
+    - JSON data
+    - The population of the corresponding county or state will be used
+    - Data is available for the entire US
+
 * Y The primary dataset "online climate data" from data.gov is used
 
 * Y All datasets used are from the US government
