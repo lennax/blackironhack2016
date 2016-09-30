@@ -121,7 +121,7 @@ def get_result(lat, lng, mydate, state=None):
         app.logger.debug(state)
         zika_data = get_zika()
         for row in zika_data[1:]:
-            app.logger.debug(row[0], state.lower() == row[0].lower())
+            app.logger.debug("%s %s", (row[0], state.lower() == row[0].lower()))
             if state.lower() == row[0].lower():
                 cases = row[1] + row[2]
 

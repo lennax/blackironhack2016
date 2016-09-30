@@ -13,34 +13,30 @@ $('#myNavTabs a').click(function (e) {
 // Client-side input validation
 $(function () {
     "use strict";
-    
+
     function disableSubmit() {
         // Disable submit
-        $('#submit').attr("disabled", "disabled"
-                         ).addClass("disabled"
-                                   ).attr("title", "Please fill out required values");
+        $('#submit').attr("disabled", "disabled").addClass("disabled").attr("title", "Please fill out required values");
     };
-    
+
     //disableSubmit();
-    
+
     function checkSubmit(e) {
         var destinationLen = $('input[name="destination"]').val().length
         var dateVal = $('input[name="date"]').val()
-//        console.log(destinationLen, destinationLen > 0);
-//        console.log(dateVal);
-//        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
+            //        console.log(destinationLen, destinationLen > 0);
+            //        console.log(dateVal);
+            //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
         if (destinationLen > 0 && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-            $('#submit').removeAttr("disabled"
-                                   ).removeClass("disabled"
-                                                ).attr("title", "Submit form")
+            $('#submit').removeAttr("disabled").removeClass("disabled").attr("title", "Submit form")
         } else {
             disableSubmit();
         }
     }
-    
+
     $('input[name="destination"]').on('keyup textinput', checkSubmit);
     $('input[name="date"]').on('change', checkSubmit);
-    
+
 });
 
 // Gauge function
@@ -86,7 +82,7 @@ $(function () {
         //var location = new google.maps.LatLng(39.8282, -98.5795);
 
         var location = new google.maps.LatLng(40.4237, -86.9212);
-        
+
         var mapCanvas = document.getElementById('map');
         var mapOptions = {
             center: location,
@@ -126,7 +122,7 @@ function geocode(address) {
 $(function () {
     "use strict";
 
-    var submit_form = function (e) {
+    function submit_form(e) {
 
         var destination = $('input[name="destination"]').val();
         //console.log(destination)
@@ -144,16 +140,16 @@ $(function () {
         }).then(function (response) {
             // TODO determine how to parse address_components
             var state;
-//            console.log(response.address_components);
-            for (var x=0; x < response.address_components.length; x++) {
+            //            console.log(response.address_components);
+            for (var x = 0; x < response.address_components.length; x++) {
                 var component = response.address_components[x];
-//                console.log(component);
-//                console.log(component.types[0]);
+                //                console.log(component);
+                //                console.log(component.types[0]);
                 if (component.types[0] == "administrative_area_level_1") {
                     state = component.long_name
                     console.log(component.long_name)
                 }
-                    
+
             }
             //console.log(response.address_components[2].long_name);
             $.getJSON($SCRIPT_ROOT + '/calculate', {
