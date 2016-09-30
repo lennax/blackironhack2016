@@ -7,7 +7,7 @@ from ftplib import FTP
 import json
 import logging
 import unicodedata
-import urllib
+import urllib2
 
 # 3RD PARTY LIBRARIES
 from bs4 import BeautifulSoup
@@ -33,14 +33,16 @@ app.logger.debug('debug message')
 open_climate_ftp = "ftp.ncdc.noaa.gov"
 #"/pub/data/normals/1981-2010/"
 zika_url = "http://www.cdc.gov/zika/intheus/maps-zika-us.html"
+census_api_key = "36a6a8b2ee9eafcc4afb7f7948e2724907c628e3"
+census_url = "http://api.census.gov/data/2015/acs1"
 
 
-@app.before_first_request
-def setup_logging():
-    if not app.debug:
-        # In production mode, add log handler to sys.stderr.
-        app.logger.addHandler(logging.StreamHandler())
-        app.logger.setLevel(logging.INFO)
+#@app.before_first_request
+#def setup_logging():
+    #if not app.debug:
+        ## In production mode, add log handler to sys.stderr.
+        #app.logger.addHandler(logging.StreamHandler())
+        #app.logger.setLevel(logging.INFO)
 
 @app.route('/')
 def index():
@@ -56,53 +58,22 @@ def calculate():
     lng = request.args.get('lng', type=float)
     mydate = request.args.get('date')
     state = request.args.get('state')
+    county = request.args.get('county')
 #    print destination
-    return jsonify(result=get_result(lat=lat,
-                                     lng=lng,
-                                     mydate=mydate,
-                                     state=state))
+    kwargs = dict(lat=lat,
+                  lng=lng,
+                  mydate=mydate,
+                  state=state,
+                  county=county)
+    return jsonify(result=get_result(**kwargs))
 
-def get_zika():
-    html_doc = urllib.urlopen(zika_url)
-
-    soup = BeautifulSoup(html_doc, "html.parser")
-
-    table = soup.body.find("div", id="content").table
-
-    def clean_text(text):
-        for repl in "\n", u"\u2020", "*":
-            text = text.replace(repl, " ")
-        text = text.strip()
-        if text:
-            return unicodedata.normalize("NFKD", text)
-
-    def process_row(row):
-        for x in 1, 2:
-            row[x] = int(row[x].split()[0].replace(",", ""))
-        return row
-
-    data = list()
-
-    header_cols = table.thead.find_all("th")
-    header_cols = [clean_text(ele.text) for ele in header_cols]
-    data.append(header_cols)
-
-    for row in table.tbody.find_all('tr'):
-        cols = row.find_all('td')
-        cols = [clean_text(ele.text) for ele in cols]
-        if cols and not all(c is None for c in cols):
-            data.append(process_row(cols))
-
-    return data
-
-def get_result(lat, lng, mydate, state=None):
+def get_result(lat, lng, mydate, state=None, county=None):
 
     latlng = (lat, lng)
     #print latlng
     app.logger.debug(latlng)
 
     # parse date
-    #datefmt = "%m/%d/%Y"
     datefmt = "%Y-%m-%d"
     try:
         parsed_date = datetime.datetime.strptime(mydate, datefmt)
@@ -116,14 +87,21 @@ def get_result(lat, lng, mydate, state=None):
 
     app.logger.debug(state)
     cases = None
+    pop_sentence = None
     if state is not None:
         app.logger.debug("getting zika data")
-        app.logger.debug(state)
         zika_data = get_zika()
         for row in zika_data[1:]:
-            app.logger.debug("%s %s", (row[0], state.lower() == row[0].lower()))
+            app.logger.debug("{0} {1} {2}".format(row[0], state, state.lower() == row[0].lower()))
             if state.lower() == row[0].lower():
                 cases = row[1] + row[2]
+
+        pop_dict = get_population(state=state, county=county)
+        if pop_dict['error'] is None:
+            if county is not None and pop_dict['county_pop'] is not None:
+                pop_sentence = "{0}, {1} has {county_pop} residents.".format(county, state, **pop_dict)
+            elif pop_dict['state_pop'] is not None:
+                pop_sentence = "{0} has {state_pop} residents.".format(state, **pop_dict)
 
     # possibly temporarily use zip codes
 #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
@@ -311,11 +289,96 @@ def get_result(lat, lng, mydate, state=None):
         # TODO logistic function
         risk = min(100, risk * 2)
 
+    if pop_sentence is not None:
+        result_text = result_text + " " + pop_sentence
+
     result_dict = dict(text=result_text,
                        risk=risk,
                        error=0)
 
     return result_dict
+
+def get_zika():
+    html_doc = urllib2.urlopen(zika_url)
+
+    soup = BeautifulSoup(html_doc, "html.parser")
+
+    table = soup.body.find("div", id="content").table
+
+    def clean_text(text):
+        for repl in "\n", u"\u2020", "*":
+            text = text.replace(repl, " ")
+        text = text.strip()
+        if text:
+            return unicodedata.normalize("NFKD", text)
+
+    def process_row(row):
+        for x in 1, 2:
+            row[x] = int(row[x].split()[0].replace(",", ""))
+        return row
+
+    data = list()
+
+    header_cols = table.thead.find_all("th")
+    header_cols = [clean_text(ele.text) for ele in header_cols]
+    data.append(header_cols)
+
+    for row in table.tbody.find_all('tr'):
+        cols = row.find_all('td')
+        cols = [clean_text(ele.text) for ele in cols]
+        if cols and not all(c is None for c in cols):
+            data.append(process_row(cols))
+
+    return data
+
+def get_population(state=None, county=None):
+    result = dict(error=None,
+                  state_pop=None,
+                  county_pop=None)
+
+    if state is None:
+        result['error'] = "No population data available."
+        return result
+
+    kwargs = dict(key=census_api_key)
+    state_param = "?get=NAME,B01001_001E&for=state:*&key={key}".format(**kwargs)
+    state_url = census_url + state_param
+    
+    state_data = json.load(urllib2.urlopen(state_url))
+    header = state_data[0]
+    name_index = header.index("NAME")
+    pop_index = header.index("B01001_001E")
+    number_index = header.index("state")
+
+    state_number = None
+    for row in state_data[1:]:
+        if row[name_index].lower() == state.lower():
+            if county is None:
+                result['state_pop'] = row[pop_index]
+                return result
+            else:
+                state_number = row[number_index]
+                break
+
+    if state_number is not None and county is not None:
+        county_param = "?get=NAME,B01001_001E&for=county:*&in=state:{state}&key={key}".format(state=state_number, **kwargs)
+        county_url = census_url + county_param
+        county_handle = urllib2.urlopen(county_url)
+        try:
+            county_data = json.load(county_handle)
+        except Exception:
+            app.logger.debug(county_url)
+            raise
+
+        c_header = county_data[0]
+        c_name_index = c_header.index("NAME")
+        c_pop_index = c_header.index("B01001_001E")
+        for row in county_data[1:]:
+            if row[c_name_index].lower().startswith(county.lower()):
+                result['county_pop'] = row[c_pop_index]
+                return result
+
+    return result
 
 if __name__ == "__main__":
     app.run()
