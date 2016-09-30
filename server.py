@@ -18,7 +18,7 @@ from flask import Flask, jsonify, render_template, request, make_response, curre
 from flask.ext.cors import CORS, cross_origin
 app = Flask(__name__)
 CORS(app)
-#app.debug = True
+app.debug = True
 
 # Only use the FileHandler from gunicorn.error logger
 gunicorn_error_handlers = logging.getLogger('gunicorn.error').handlers
@@ -35,6 +35,12 @@ open_climate_ftp = "ftp.ncdc.noaa.gov"
 zika_url = "http://www.cdc.gov/zika/intheus/maps-zika-us.html"
 
 
+@app.before_first_request
+def setup_logging():
+    if not app.debug:
+        # In production mode, add log handler to sys.stderr.
+        app.logger.addHandler(logging.StreamHandler())
+        app.logger.setLevel(logging.INFO)
 
 @app.route('/')
 def index():
@@ -49,10 +55,12 @@ def calculate():
     lat = request.args.get('lat', type=float)
     lng = request.args.get('lng', type=float)
     mydate = request.args.get('date')
+    state = request.args.get('state')
 #    print destination
     return jsonify(result=get_result(lat=lat,
                                      lng=lng,
-                                     mydate=mydate))
+                                     mydate=mydate,
+                                     state=state))
 
 def get_zika():
     html_doc = urllib.urlopen(zika_url)
@@ -87,7 +95,7 @@ def get_zika():
 
     return data
 
-def get_result(lat, lng, mydate):
+def get_result(lat, lng, mydate, state=None):
 
     latlng = (lat, lng)
     #print latlng
@@ -106,7 +114,16 @@ def get_result(lat, lng, mydate):
 
 #    print mydate, month_number, month_name
 
-    zika_data = get_zika()
+    app.logger.debug(state)
+    cases = None
+    if state is not None:
+        app.logger.debug("getting zika data")
+        app.logger.debug(state)
+        zika_data = get_zika()
+        for row in zika_data[1:]:
+            app.logger.debug(row[0], state.lower() == row[0].lower())
+            if state.lower() == row[0].lower():
+                cases = row[1] + row[2]
 
     # possibly temporarily use zip codes
 #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
@@ -288,6 +305,11 @@ def get_result(lat, lng, mydate):
     else:
         result_text = "The climate at your destination is not hospitable to mosquitoes."
         risk = 1
+    
+    if state is not None and cases is not None:
+        result_text += " {0} total cases of Zika have been reported in {1}.".format(cases, state)
+        # TODO logistic function
+        risk = min(100, risk * 2)
 
     result_dict = dict(text=result_text,
                        risk=risk,

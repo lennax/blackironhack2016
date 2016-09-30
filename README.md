@@ -57,7 +57,7 @@ The website shows the destination on a map and estimates the disease risk on tha
     2. N The gauge is not interactive (may add interactive chart of multiple risk factors)
 
 * Interaction Form
-    1. y Information about climate, mosquito activity, and risk will be output
+    1. Y Information about climate, mosquito activity, and cases of Zika in the state is output
     2. y The user will be able to change the date and destination of travel to see how risk is changed
     3. Y The user inputs their date of travel and destination
     4. y If the user changes the date and destination of travel, the map will be updated based on the climate and location
@@ -67,8 +67,11 @@ Build Case
 ----------
 * Dependencies
     - python
+    - gunicorn
     - flask
     - flask-cors
+    - numpy
+    - beautifulsoup4
 
 * Building
     sudo apt-get install python python-flask python-pip
