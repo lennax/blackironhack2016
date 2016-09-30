@@ -2,50 +2,52 @@
 Copyright 2016 Lenna X. Peterson
 **/
 
-// Nav tabs
-$('#myNavTabs a').click(function (e) {
+if (typeof MYAPPLICATION === "undefined") {
+  var MyApp = {};
+}
+
+MyApp.disableSubmit = function () {
   "use strict";
-  //console.log("click");
-  e.preventDefault();
-  $(this).tab('show');
-});
+  $('#submit').attr("disabled", "disabled").addClass("disabled").attr("title", "Please fill out required values");
+};
 
 // Client-side input validation
-$(function () {
+MyApp.checkSubmit = function (e) {
+  "use strict";
+  var destinationLen = $('input[name="destination"]').val().length
+  var dateVal = $('input[name="date"]').val()
+    //        console.log(destinationLen, destinationLen > 0);
+    //        console.log(dateVal);
+    //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
+  if (destinationLen && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    $('#submit').removeAttr("disabled").removeClass("disabled").attr("title", "Submit form")
+  } else {
+    MyApp.disableSubmit();
+  }
+};
+
+MyApp.initMap = function () {
   "use strict";
 
-  function disableSubmit() {
-    // Disable submit
-    $('#submit').attr("disabled", "disabled").addClass("disabled").attr("title", "Please fill out required values");
+  // Geographic center of continental US
+  //var location = new google.maps.LatLng(39.8282, -98.5795);
+
+  // Purdue
+  var location = new google.maps.LatLng(40.4237, -86.9212);
+
+  var mapCanvas = document.getElementById('map');
+  var mapOptions = {
+    center: location,
+    zoom: 12,
+    //            panControl: false,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
   };
+  // Not sure if this needs to be declared outside
+  MyApp.map = new google.maps.Map(mapCanvas, mapOptions);
 
-  //disableSubmit();
+}
 
-  function checkSubmit(e) {
-    var destinationLen = $('input[name="destination"]').val().length
-    var dateVal = $('input[name="date"]').val()
-      //        console.log(destinationLen, destinationLen > 0);
-      //        console.log(dateVal);
-      //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
-    if (destinationLen && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
-      $('#submit').removeAttr("disabled").removeClass("disabled").attr("title", "Submit form")
-    } else {
-      disableSubmit();
-    }
-  }
-
-  $('input[name="destination"]').on('keyup textinput', checkSubmit);
-  $('input[name="date"]').on('change', checkSubmit);
-
-});
-
-// Gauge function
-google.charts.load('current', {
-  'packages': ['gauge']
-});
-//google.charts.setOnLoadCallback(drawChart);
-
-function drawChart(risk) {
+MyApp.drawChart = function (risk) {
   "use strict";
 
   var data = google.visualization.arrayToDataTable([
@@ -68,45 +70,17 @@ function drawChart(risk) {
 
   chart.draw(data, options);
 
-  // setInterval(function () { // data.setValue(0, 1, 40 + Math.round(60 * Math.random())); // chart.draw(data, options); // }, 13000);
-}
+  // setInterval(function () { // data.setValue(0, 1, 40 + Math.round(60 * Math.random())); // chart.draw(data, options); // }, 13000);  
+};
 
-// map
-var map;
-$(function () {
-  "use strict";
-
-  function initMap() {
-
-    // Geographic center of continental US
-    //var location = new google.maps.LatLng(39.8282, -98.5795);
-
-    var location = new google.maps.LatLng(40.4237, -86.9212);
-
-    var mapCanvas = document.getElementById('map');
-    var mapOptions = {
-      center: location,
-      zoom: 12,
-      //            panControl: false,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-    map = new google.maps.Map(mapCanvas, mapOptions);
-
-  }
-
-  google.maps.event.addDomListener(window, 'load', initMap);
-
-
-});
+MyApp.geocoder = new google.maps.Geocoder();
 
 // Geocoding promise
-var geocoder = new google.maps.Geocoder();
-
-function geocode(address) {
+MyApp.geocode = function (address) {
   "use strict";
   // Return a new promise.
   return new Promise(function (resolve, reject) {
-    geocoder.geocode({
+    MyApp.geocoder.geocode({
       'address': address
     }, function (results, status) {
       if (status == 'OK') {
@@ -116,75 +90,99 @@ function geocode(address) {
       }
     });
   });
-}
+};
+
+MyApp.submitForm = function () {
+
+  var destination = $('input[name="destination"]').val();
+  //console.log(destination)
+
+  MyApp.geocode(destination).then(function (response) {
+    //console.log("Success!", response);
+    MyApp.map.fitBounds(response.geometry.viewport);
+    var marker = new google.maps.Marker({
+      map: MyApp.map,
+      position: response.geometry.location
+    });
+    return response;
+  }, function (error) {
+    alert('Geocode not successful: ' + status);
+  }).then(function (response) {
+    // TODO determine how to parse address_components
+    var state;
+    //            console.log(response.address_components);
+    for (var x = 0; x < response.address_components.length; x++) {
+      var component = response.address_components[x];
+      //                console.log(component);
+      //                console.log(component.types[0]);
+      if (component.types[0] == "administrative_area_level_1") {
+        state = component.long_name
+        console.log(component.long_name)
+      }
+
+    }
+    //console.log(response.address_components[2].long_name);
+    $.getJSON($SCRIPT_ROOT + '/calculate', {
+        lat: response.geometry.location.lat(),
+        lng: response.geometry.location.lng(),
+        date: $('input[name="date"]').val(),
+        state: state,
+      },
+      function (data) {
+        if (data.result.error != 0) {
+          $('#result').text("Error: " + data.result.error);
+        } else {
+          console.log(data.result);
+          $('input[name=destination]').focus().select();
+          //alert(data.result);
+          MyApp.drawChart(data.result.risk);
+          //console.log(data.result.text)
+          $('#result').text(data.result.text);
+        }
+      });
+  });
+
+  return false;
+};
+
 
 // Process form and call python
 $(function () {
   "use strict";
 
-  function submit_form(e) {
+  // Add functionality to nav tabs
+  $('#myNavTabs a').click(function (e) {
+    "use strict";
+    //console.log("click");
+    e.preventDefault();
+    $(this).tab('show');
+  });
 
-    var destination = $('input[name="destination"]').val();
-    //console.log(destination)
+  // Load Google chart package
+  google.charts.load('current', {
+    'packages': ['gauge']
+  });
 
-    geocode(destination).then(function (response) {
-      //console.log("Success!", response);
-      map.fitBounds(response.geometry.viewport);
-      var marker = new google.maps.Marker({
-        map: map,
-        position: response.geometry.location
-      });
-      return response;
-    }, function (error) {
-      alert('Geocode not successful: ' + status);
-    }).then(function (response) {
-      // TODO determine how to parse address_components
-      var state;
-      //            console.log(response.address_components);
-      for (var x = 0; x < response.address_components.length; x++) {
-        var component = response.address_components[x];
-        //                console.log(component);
-        //                console.log(component.types[0]);
-        if (component.types[0] == "administrative_area_level_1") {
-          state = component.long_name
-          console.log(component.long_name)
-        }
+  // Load map
+  google.maps.event.addDomListener(window, 'load', MyApp.initMap);
 
-      }
-      //console.log(response.address_components[2].long_name);
-      $.getJSON($SCRIPT_ROOT + '/calculate', {
-          lat: response.geometry.location.lat(),
-          lng: response.geometry.location.lng(),
-          date: $('input[name="date"]').val(),
-          state: state,
-        },
-        function (data) {
-          if (data.result.error != 0) {
-            $('#result').text("Error: " + data.result.error);
-          } else {
-            console.log(data.result);
-            $('input[name=destination]').focus().select();
-            //alert(data.result);
-            drawChart(data.result.risk);
-            //console.log(data.result.text)
-            $('#result').text(data.result.text);
-          }
-        });
-    });
+  // Client-side validation of input
+  $('input[name="destination"]').on('keyup textinput', MyApp.checkSubmit);
+  $('input[name="date"]').on('change', MyApp.checkSubmit);
 
-    return false;
-  };
+  // Bind button click to submit
+  $('input#submit').bind('click', MyApp.submitForm);
 
-  $('input#submit').bind('click', submit_form);
-
+  // Bind enter to submit
+  // FIXME require input validation
   $('input[type=text]').bind('keydown', function (e) {
     if (e.keyCode == 13) {
-      submit_form(e);
+      MyApp.submitForm(e);
     }
   });
 
+  // Put cursor into first input box
   $('input[name=destination]').focus();
-
 
 
 });
