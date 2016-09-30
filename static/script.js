@@ -27,7 +27,7 @@ $(function () {
       //        console.log(destinationLen, destinationLen > 0);
       //        console.log(dateVal);
       //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
-    if (destinationLen > 0 && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    if (destinationLen && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
       $('#submit').removeAttr("disabled").removeClass("disabled").attr("title", "Submit form")
     } else {
       disableSubmit();
