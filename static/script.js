@@ -143,11 +143,24 @@ $(function () {
             alert('Geocode not successful: ' + status);
         }).then(function (response) {
             // TODO determine how to parse address_components
-            console.log(response.address_components);
+            var state;
+//            console.log(response.address_components);
+            for (var x=0; x < response.address_components.length; x++) {
+                var component = response.address_components[x];
+//                console.log(component);
+//                console.log(component.types[0]);
+                if (component.types[0] == "administrative_area_level_1") {
+                    state = component.long_name
+                    console.log(component.long_name)
+                }
+                    
+            }
+            //console.log(response.address_components[2].long_name);
             $.getJSON($SCRIPT_ROOT + '/calculate', {
                     lat: response.geometry.location.lat(),
                     lng: response.geometry.location.lng(),
-                    date: $('input[name="date"]').val()
+                    date: $('input[name="date"]').val(),
+                    state: state,
                 },
                 function (data) {
                     if (data.result.error != 0) {
