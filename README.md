@@ -20,13 +20,19 @@ Datasets
 --------
 * NOAA 1981-2010 Climate Normals 
     - ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/products/temperature/mly-cldd-base57.txt
-    - Monthly cooling degree day data
+    - Text data
     - The month column corresponding to the date of travel will be used
+    - Data is available for the entire US
+
+* Zika Cases Reported in the United States
+    - http://www.cdc.gov/zika/intheus/maps-zika-us.html 
+    - Table data
+    - The number of cases for the corresponding state will be used
     - Data is available for the entire US
 
 * Y The primary dataset "online climate data" from data.gov is used
 
-* Y All datasets used are from data.gov
+* Y All datasets used are from the US government
 
 Description
 -----------

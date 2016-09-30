@@ -6,9 +6,11 @@ from functools import update_wrapper
 from ftplib import FTP
 import json
 import logging
+import unicodedata
 import urllib
 
 # 3RD PARTY LIBRARIES
+from bs4 import BeautifulSoup
 import numpy as np
 
 from flask import Flask, jsonify, render_template, request, make_response, current_app
@@ -30,6 +32,8 @@ app.logger.debug('debug message')
 
 open_climate_ftp = "ftp.ncdc.noaa.gov"
 #"/pub/data/normals/1981-2010/"
+zika_url = "http://www.cdc.gov/zika/intheus/maps-zika-us.html"
+
 
 
 @app.route('/')
@@ -50,6 +54,39 @@ def calculate():
                                      lng=lng,
                                      mydate=mydate))
 
+def get_zika():
+    html_doc = urllib.urlopen(zika_url)
+
+    soup = BeautifulSoup(html_doc, "html.parser")
+
+    table = soup.body.find("div", id="content").table
+
+    def clean_text(text):
+        for repl in "\n", u"\u2020", "*":
+            text = text.replace(repl, " ")
+        text = text.strip()
+        if text:
+            return unicodedata.normalize("NFKD", text)
+
+    def process_row(row):
+        for x in 1, 2:
+            row[x] = int(row[x].split()[0].replace(",", ""))
+        return row
+
+    data = list()
+
+    header_cols = table.thead.find_all("th")
+    header_cols = [clean_text(ele.text) for ele in header_cols]
+    data.append(header_cols)
+
+    for row in table.tbody.find_all('tr'):
+        cols = row.find_all('td')
+        cols = [clean_text(ele.text) for ele in cols]
+        if cols and not all(c is None for c in cols):
+            data.append(process_row(cols))
+
+    return data
+
 def get_result(lat, lng, mydate):
 
     latlng = (lat, lng)
@@ -68,6 +105,8 @@ def get_result(lat, lng, mydate):
     month_name = parsed_date.strftime("%B")
 
 #    print mydate, month_number, month_name
+
+    zika_data = get_zika()
 
     # possibly temporarily use zip codes
 #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
