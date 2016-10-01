@@ -21,19 +21,25 @@ Datasets
 * NOAA 1981-2010 Climate Normals 
     - ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/products/temperature/mly-cldd-base57.txt
     - Text data
-    - The month column corresponding to the date of travel will be used
+    - The month column corresponding to the date of travel is used
     - Data is available for the entire US
 
 * Zika Cases Reported in the United States
     - http://www.cdc.gov/zika/intheus/maps-zika-us.html 
     - Table data
-    - The number of cases for the corresponding state will be used
+    - The number of cases for the corresponding state is used
     - Data is available for the entire US
 
 * 2015 American Community Survey Subject Tables
     - http://api.census.gov/data/2015/acs1
     - JSON data
-    - The population of the corresponding county or state will be used
+    - The population of the corresponding county or state is used
+    - Data is available for the entire US
+
+* Compressed Mortality File 1999-2014 on CDC WONDER Online Database
+    - http://wonder.cdc.gov/cmf-icd10.html
+    - Table data
+    - Annual deaths per 1,000,000 in the USA by several causes is used
     - Data is available for the entire US
 
 * Y The primary dataset "online climate data" from data.gov is used
