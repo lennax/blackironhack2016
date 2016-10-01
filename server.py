@@ -69,6 +69,11 @@ def calculate():
 
 def get_result(lat, lng, mydate, state=None, county=None):
 
+    result_dict = dict(text=None,
+                       risk=None,
+                       zcases=None,
+                       error=0)
+  
     latlng = (lat, lng)
     #print latlng
     app.logger.debug(latlng)
@@ -79,7 +84,8 @@ def get_result(lat, lng, mydate, state=None, county=None):
         parsed_date = datetime.datetime.strptime(mydate, datefmt)
     except ValueError:
         # Server-side input validation
-        return dict(error="Invalid date")
+        result_dict['error'] = 'Invalid date'
+        return result_dict
     month_number = parsed_date.month
     month_name = parsed_date.strftime("%B")
 
@@ -292,11 +298,11 @@ def get_result(lat, lng, mydate, state=None, county=None):
     if pop_sentence is not None:
         result_text = result_text + " " + pop_sentence
 
-    result_dict = dict(text=result_text,
-                       risk=risk,
-                       error=0)
+    result_dict['text'] = result_text
+    result_dict['risk'] = risk
 
     return result_dict
+
 
 def get_zika():
     html_doc = urllib2.urlopen(zika_url)
