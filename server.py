@@ -109,8 +109,64 @@ def get_result(lat, lng, mydate, state=None, county=None):
             elif pop_dict['state_pop'] is not None:
                 pop_sentence = "{0} has {state_pop} residents.".format(state, **pop_dict)
 
+    climate_dict = get_climate(latlng=latlng,
+                               month_number=month_number,
+                               month_name=month_name) 
+    if climate_dict['error']:
+        return climate_dict
+    else:
+        result_dict.update(climate_dict)
+
+    result_text = result_dict['text']
+    risk = result_dict['risk']
+
+    # TODO handle missing data classes better
+    if state is not None and cases is not None:
+        result_text += " {0} total cases of Zika have been reported in {1}.".format(cases, state)
+        # TODO logistic function
+        risk = min(100, risk * 2)
+
+    if pop_sentence is not None:
+        result_text = result_text + " " + pop_sentence
+
+    result_dict['text'] = result_text
+    result_dict['risk'] = risk
+
+    return result_dict
+
+# radius of Earth in miles
+earth_radius = 3958.75
+
+def get_distances(latlng, coord_array):
+    "Compute lat/lng distance using Haversine formula"
+    latlng = np.deg2rad(latlng)
+    coord_array = np.deg2rad(coord_array)
+
+    lat_diff = (coord_array[:, 0] - latlng[0]) * 0.5
+    lng_diff = (coord_array[:, 1] - latlng[1]) * 0.5
+
+    np.sin(lat_diff, out=lat_diff)
+    np.sin(lng_diff, out=lng_diff)
+
+    np.power(lat_diff, 2, out=lat_diff)
+    np.power(lng_diff, 2, out=lng_diff)
+
+    lng_diff *= (np.cos(coord_array[:, 0]) * np.cos(latlng[0]))
+    lng_diff += lat_diff
+
+    np.arcsin(np.power(lng_diff, 0.5), out=lng_diff)
+    lng_diff *= (2 * earth_radius)
+
+    return lng_diff
+
+def get_climate(latlng, month_number, month_name):
+
+    result_dict = dict(text=None,
+                       risk=None,
+                       error="")
+
     # possibly temporarily use zip codes
-#    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
+    #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
 
     # Query NOAA for list of weather stations
     ftp = FTP(open_climate_ftp)
@@ -130,34 +186,9 @@ def get_result(lat, lng, mydate, state=None, county=None):
         coord_array[x, 0] = lat
         coord_array[x, 1] = lon
 
-#    print coord_array[:6]
+    #    print coord_array[:6]
 
     # Find closest weather station
-
-    # radius of Earth in miles
-    earth_radius = 3958.75
-
-    def get_distances(latlng, coord_array):
-        "Compute lat/lng distance using Haversine formula"
-        latlng = np.deg2rad(latlng)
-        coord_array = np.deg2rad(coord_array)
-
-        lat_diff = (coord_array[:, 0] - latlng[0]) * 0.5
-        lng_diff = (coord_array[:, 1] - latlng[1]) * 0.5
-
-        np.sin(lat_diff, out=lat_diff)
-        np.sin(lng_diff, out=lng_diff)
-
-        np.power(lat_diff, 2, out=lat_diff)
-        np.power(lng_diff, 2, out=lng_diff)
-
-        lng_diff *= (np.cos(coord_array[:, 0]) * np.cos(latlng[0]))
-        lng_diff += lat_diff
-
-        np.arcsin(np.power(lng_diff, 0.5), out=lng_diff)
-        lng_diff *= (2 * earth_radius)
-
-        return lng_diff
 
     distances = get_distances(latlng, coord_array)
     # Get the index of the smallest distance
@@ -169,35 +200,35 @@ def get_result(lat, lng, mydate, state=None, county=None):
     app.logger.debug(stationid)
 
     # TODO Get month data for that weather station
-#        1. Long-term averages of monthly precipitation totals:
-#  	  mly-prcp-normal.txt
-#       2. The average number of days per month with snowfall greater than 1 inch:
-#          mly-snow-avgnds-ge010ti.txt
-#       3. Daily average base-65 heating degree days:
-#          dly-htdd-normal.txt.
-#       4. Daily average base-50 heating degree days:
-#          dly-htdd-base50.txt
-#       5. Hourly heat index normals:
-#          hly-hidx-normal.txt
+    #        1. Long-term averages of monthly precipitation totals:
+    #  	  mly-prcp-normal.txt
+    #       2. The average number of days per month with snowfall greater than 1 inch:
+    #          mly-snow-avgnds-ge010ti.txt
+    #       3. Daily average base-65 heating degree days:
+    #          dly-htdd-normal.txt.
+    #       4. Daily average base-50 heating degree days:
+    #          dly-htdd-base50.txt
+    #       5. Hourly heat index normals:
+    #          hly-hidx-normal.txt
 
-#       Variable  Columns  Type
-#       ----------------------------
-#       STNID       1- 11  Character
-#       VALUE1     19- 23  Integer
-#       FLAG1      24- 24  Character
-#       - - - - - - - - - - - - - -
-#       VALUE12    96-100  Integer
-#       FLAG12    101-101  Character
-#       ----------------------------
-#
-#       These variables have the following definitions:
-#
-#       STNID   is the GHCN-Daily station identification code.
-#       VALUE1  is the January value.
-#       FLAG1   is the completeness flag for January. See Flags section below.
-#       - - - -
-#       Value12 is the December value.
-#       Flag12  is the completeness flag for December.
+    #       Variable  Columns  Type
+    #       ----------------------------
+    #       STNID       1- 11  Character
+    #       VALUE1     19- 23  Integer
+    #       FLAG1      24- 24  Character
+    #       - - - - - - - - - - - - - -
+    #       VALUE12    96-100  Integer
+    #       FLAG12    101-101  Character
+    #       ----------------------------
+    #
+    #       These variables have the following definitions:
+    #
+    #       STNID   is the GHCN-Daily station identification code.
+    #       VALUE1  is the January value.
+    #       FLAG1   is the completeness flag for January. See Flags section below.
+    #       - - - -
+    #       Value12 is the December value.
+    #       Flag12  is the completeness flag for December.
 
     def get_row(filename):
         row_list = list()
@@ -214,23 +245,27 @@ def get_result(lat, lng, mydate, state=None, county=None):
 
     # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4001452/
     # Aedes albopictus is not expected to survive average January temperatures of -5 C (23 F)
-#    tenths of degrees Fahrenheit for maximum, minimum, average, dew point, heat
-#    index, wind chill, and air temperature normals and standard deviations.
-#    e.g., "703" is 70.3F
+    #    tenths of degrees Fahrenheit for maximum, minimum, average, dew point, heat
+    #    index, wind chill, and air temperature normals and standard deviations.
+    #    e.g., "703" is 70.3F
     tavg_row = get_row("products/temperature/mly-tavg-normal.txt")
     if tavg_row is not None:
         tavg_ints = [int(v[:-1]) * 0.1 for v in tavg_row.split()[1:]]
         jan_temp = tavg_ints[0]
         temp_risk = bool(jan_temp > 23.0)
+    else:
+        result_dict['error'] += " No monthly average temperature found."
 
     # Aedes albopictus requires a minimum annual rainfall of ~250 mm (9.8 inches)
-#    tenths of inches for average monthly/seasonal/annual snowfall,
-#    month-to-date/year-to-date snowfall, and percentiles of snowfall.
-#    e.g. "39" is 3.9"
+    #    tenths of inches for average monthly/seasonal/annual snowfall,
+    #    month-to-date/year-to-date snowfall, and percentiles of snowfall.
+    #    e.g. "39" is 3.9"
     rain_row = get_row("products/precipitation/ann-prcp-normal.txt")
     if rain_row is not None:
         rain_in = int(rain_row.split()[1][:-1]) * 0.1
         rain_risk = bool(rain_in >= 9.8)
+    else:
+        result_dict['error'] += " No annual precipitation found."
 
     if temp_risk and rain_risk:
 
@@ -248,6 +283,8 @@ def get_result(lat, lng, mydate, state=None, county=None):
             #print cumulative_cdd
             app.logger.debug(cumulative_cdd)
             cooling_value = cumulative_cdd[month_number - 1]
+        else:
+            result_dict['error'] += " No cooling degree data found."
 
         cooling_text = "mosquitoes have likely not yet hatched"
         if cooling_value > 100:
@@ -275,10 +312,10 @@ def get_result(lat, lng, mydate, state=None, county=None):
     #    hundredths of inches for average monthly/seasonal/annual precipitation,
     #    month-to-date/year-to-date precipitation, and percentiles of precipitation.
     #    e.g., "1" is 0.01" and "1486" is 14.86"
-#        precip_result = get_row("products/precipitation/mly-prcp-normal.txt")
-#    #    print precip_result
-#        precip_list = precip_result.split()
-#        precip_value = int(precip_list[month_number][:-1]) * 0.01
+    #        precip_result = get_row("products/precipitation/mly-prcp-normal.txt")
+    #    #    print precip_result
+    #        precip_list = precip_result.split()
+    #        precip_value = int(precip_list[month_number][:-1]) * 0.01
 
         result_text = "The climate at your destination is hospitable to mosquitoes. In {month_name}, {cooling_text}.".format(
             cooling_text=cooling_text, month_name=month_name)
@@ -289,20 +326,10 @@ def get_result(lat, lng, mydate, state=None, county=None):
     else:
         result_text = "The climate at your destination is not hospitable to mosquitoes."
         risk = 1
-    
-    if state is not None and cases is not None:
-        result_text += " {0} total cases of Zika have been reported in {1}.".format(cases, state)
-        # TODO logistic function
-        risk = min(100, risk * 2)
-
-    if pop_sentence is not None:
-        result_text = result_text + " " + pop_sentence
 
     result_dict['text'] = result_text
     result_dict['risk'] = risk
-
     return result_dict
-
 
 def get_zika():
     html_doc = urllib2.urlopen(zika_url)
