@@ -103,7 +103,40 @@ MyApp.drawLadder = function (zcases) {
 ];
 
   var breakpoint = 4;
-  
+
+  var deathColor = 'rgba(156, 165, 196, 0.95)';
+
+  var deathMarker = {
+    color: deathColor,
+    line: {
+      color: deathColor,
+      width: 1,
+    },
+    symbol: 'circle',
+    size: 16
+  };
+
+
+  var caseColor = 'rgba(211, 172, 167, 0.95)';
+  var caseMarker = {
+    color: caseColor,
+    line: {
+      color: caseColor,
+      width: 1,
+    },
+    symbol: 'circle',
+    size: 16
+  };
+
+  var dummytrace = {
+    type: 'scatter',
+    x: [0],
+    y: [0],
+    mode: 'markers',
+    name: 'Deaths per 1M in USA',
+    marker: deathMarker,
+  };
+
   var smalltrace = {
     type: 'scatter',
     x: rate.slice(breakpoint, rate.length),
@@ -113,15 +146,7 @@ MyApp.drawLadder = function (zcases) {
     textposition: 'right',
     name: 'Deaths per 1M',
     showlegend: false,
-    marker: {
-      color: 'rgba(156, 165, 196, 0.95)',
-      line: {
-        color: 'rgba(156, 165, 196, 1.0)',
-        width: 1,
-      },
-      symbol: 'circle',
-      size: 16
-    }
+    marker: deathMarker
   };
 
   var largetrace = {
@@ -132,61 +157,38 @@ MyApp.drawLadder = function (zcases) {
     text: cause.slice(0, breakpoint),
     textposition: 'left',
     name: 'Deaths per 1M in USA',
-    //showlegend: false,
-    marker: {
-      color: 'rgba(156, 165, 196, 0.95)',
-      line: {
-        color: 'rgba(156, 165, 196, 1.0)',
-        width: 1,
-      },
-      symbol: 'circle',
-      size: 16
-    }
+    showlegend: false,
+    marker: deathMarker
   };
 
+  var gbsCases = 15;
   var gbstrace = {
     type: 'scatter',
-    x: [15],
-    y: [15],
+    x: [gbsCases],
+    y: [gbsCases],
     //y: ['Guillain-Barré Syndrome'],
     text: ['Guillain-Barré Syndrome'],
     textposition: 'center',
-    mode: 'markers+text',
+    mode: 'markers',
     name: 'Cases per 1M in USA',
     //showlegend: false,
-    marker: {
-      color: 'rgba(211, 172, 167, 0.95)',
-      line: {
-        color: 'rgba(211, 172, 167, 1.0)',
-        width: 1,
-      },
-      symbol: 'circle',
-      size: 16
-    }
+    marker: caseMarker
   };
-  
+
   var zikatrace = {
     type: 'scatter',
     x: [zcases],
     y: [zcases],
-    //y: ['Guillain-Barré Syndrome'],
     text: ['Zika Virus Syndrome'],
     textposition: 'center',
-    mode: 'markers+text',
+    mode: 'markers',
     name: 'Cases per 1M in state',
     //showlegend: false,
-    marker: {
-      color: 'rgba(211, 172, 167, 0.95)',
-      line: {
-        color: 'rgba(211, 172, 167, 1.0)',
-        width: 1,
-      },
-      symbol: 'circle',
-      size: 16
-    }
+    marker: caseMarker
   };
 
-  var data = [smalltrace, largetrace, gbstrace, zikatrace];
+  var data = [smalltrace, largetrace, gbstrace, zikatrace,
+              dummytrace];
 
   var xtickvals = [0.1, 1, 10, 100, 1000];
   var xticktext = ["1 in 10 million", "1 in 1 million", "1 in 100,000", "1 in 10,000", "1 in 1,000"];
@@ -237,6 +239,44 @@ MyApp.drawLadder = function (zcases) {
     legend: {
       orientation: 'h',
     },
+    annotations: [
+      {
+        x: Math.log10(gbsCases),
+        y: Math.log10(gbsCases),
+        xref: 'x',
+        yref: 'y',
+        text: 'Guillain-Barré Syndrome',
+//        font: {
+//          color: caseColor,
+//        },
+        bgcolor: 'rgba(255, 255, 255, 0.8)',
+        bordercolor: caseColor,
+        showarrow: true,
+        arrowcolor: 'rgb(67, 67, 67)',
+        arrowhead: 2,
+        ax: 100,
+        ay: 0
+      },
+      {
+        x: Math.log10(zcases),
+        y: Math.log10(zcases),
+        xref: 'x',
+        yref: 'y',
+        text: 'Zika Virus Syndrome',
+//        font: {
+//          color: caseColor,
+//        },
+        bgcolor: 'rgba(255, 255, 255, 0.8)',
+        bordercolor: caseColor,
+        borderwidth: 2,
+        showarrow: true,
+        arrowwidth: 2,
+        arrowcolor: 'rgb(67, 67, 67)',
+        arrowhead: 2,
+        ax: 100,
+        ay: -10
+      }
+    ],
     width: 600,
     height: 400,
     paper_bgcolor: 'rgb(254, 247, 234)',
@@ -338,7 +378,7 @@ MyApp.submitForm = function () {
             //alert(data.result);
             //MyApp.drawGauge(data.result.risk);
             // FIXME correct behavior on zero
-            MyApp.drawLadder(0);
+            MyApp.drawLadder(1);
             //console.log(data.result.text)
             $('#result').text(data.result.text);
           }
