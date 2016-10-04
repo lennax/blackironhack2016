@@ -59,10 +59,28 @@ def calculate():
     mydate = request.args.get('date')
     state = request.args.get('state')
     county = request.args.get('county')
+
+    errors = list()
+
+    # parse date
+    datefmt = "%Y-%m-%d"
+    try:
+        parsed_date = datetime.datetime.strptime(mydate, datefmt)
+    except ValueError:
+        # Server-side input validation
+        errors.append('invalid date format')
+
+    if not state:
+        errors.append('state not specified')
+
+    if errors:
+        msg = ", ".join(errors)
+        return jsonify(result=dict(error=msg))
+
 #    print destination
     kwargs = dict(lat=lat,
                   lng=lng,
-                  mydate=mydate,
+                  mydate=parsed_date,
                   state=state,
                   county=county)
     return jsonify(result=get_result(**kwargs))
@@ -78,18 +96,11 @@ def get_result(lat, lng, mydate, state=None, county=None):
     #print latlng
     app.logger.debug(latlng)
 
-    # parse date
-    datefmt = "%Y-%m-%d"
-    try:
-        parsed_date = datetime.datetime.strptime(mydate, datefmt)
-    except ValueError:
-        # Server-side input validation
-        result_dict['error'] = 'Invalid date'
-        return result_dict
-    month_number = parsed_date.month
-    month_name = parsed_date.strftime("%B")
-
-#    print mydate, month_number, month_name
+    # Risk factors:
+        # How many people are infected in the state?
+        # How populous is the destination?
+        # Are mosquitoes active in the destination?
+            # Is it mosquito season?
 
     app.logger.debug(state)
     cases = None
@@ -103,15 +114,14 @@ def get_result(lat, lng, mydate, state=None, county=None):
                 cases = row[1] + row[2]
 
         pop_dict = get_population(state=state, county=county)
-        if pop_dict['error'] is None:
+        if not pop_dict['error']:
             if county is not None and pop_dict['county_pop'] is not None:
                 pop_sentence = "{0}, {1} has {county_pop} residents.".format(county, state, **pop_dict)
             elif pop_dict['state_pop'] is not None:
                 pop_sentence = "{0} has {state_pop} residents.".format(state, **pop_dict)
 
     climate_dict = get_climate(latlng=latlng,
-                               month_number=month_number,
-                               month_name=month_name) 
+                               mydate=mydate)
     if climate_dict['error']:
         return climate_dict
     else:
@@ -159,11 +169,14 @@ def get_distances(latlng, coord_array):
 
     return lng_diff
 
-def get_climate(latlng, month_number, month_name):
+def get_climate(latlng, mydate):
 
     result_dict = dict(text=None,
                        risk=None,
                        error="")
+
+    month_number = mydate.month
+    month_name = mydate.strftime("%B")
 
     # possibly temporarily use zip codes
     #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
