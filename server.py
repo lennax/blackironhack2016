@@ -203,6 +203,7 @@ def get_result(lat, lng, mydate, state, county=None):
    <li>{popsummary}</li>
    <li>{climatesummary}</li>
    </ul>
+   Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and {state} compared to the annual risk of selected causes of death.
      """
     #"""
     #{destination} has {pop} people.
@@ -215,7 +216,7 @@ def get_result(lat, lng, mydate, state, county=None):
 
     app.logger.debug(risks)
 
-    result_kwargs = dict()
+    result_kwargs = dict(state=state)
 
     # Initialize classes to "unknown"
     for datatype in "cases", "pop", "climate":
@@ -318,14 +319,14 @@ def get_result(lat, lng, mydate, state, county=None):
 
     climate_summary = list()
     if mosquito_risk_names[in_mosquito_risk] == "In season":
-        climate_summary.append("{month_name} is mosquito season in Tippecanoe County, Indiana. You could reduce your risk by leaving Indiana for an area without mosquitoes.")
+        climate_summary.append("{month_name} is mosquito season in West Lafayette, Indiana. You could reduce your risk by leaving Indiana for an area without mosquitoes.")
     if mosquito_risk_names[mosquito_risk] == "In season":
         climate_summary.append("{month_name} is mosquito season in {destination}. You could reduce your risk by traveling before or after mosquito season or to a different area without mosquitoes.")
     if not climate_summary:
-        climate_sentence = "{month_name} is not mosquito season for either Indiana or {state}, so the risk of getting infected by a mosquito is low."
+        climate_sentence = "{month_name} is not mosquito season for either West Lafayette, Indiana or {state}, so the risk of getting infected by a mosquito is low."
     else:
         climate_sentence = " ".join(climate_summary)
-    result_kwargs['climatesummary'] = climate_sentence.format(month_name=month_name, destination=destination, state=state)
+    result_kwargs['climatesummary'] = climate_sentence.format(month_name=month_name, **result_kwargs)
 
     #if errors['cases']:
         #case_text = errors['cases']
