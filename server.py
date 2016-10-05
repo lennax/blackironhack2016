@@ -123,13 +123,25 @@ def get_result(lat, lng, mydate, state, county=None):
     app.logger.debug(state)
     cases = None
     app.logger.debug("getting zika data")
+    def add_zika_row(row):
+        case1 = row[1]
+        case2 = row[2]
+        try:
+            case1 = int(case1)
+            case2 = int(case2)
+        except (ValueError, TypeError):
+            app.logger.error("Invalid cases number")
+        else:
+            return case1 + case2
     zika_data = get_zika()
     for row in zika_data[1:]:
-        app.logger.debug("{0} {1} {2}".format(row[0], state, state.lower() == row[0].lower()))
-        if state.lower() == row[0].lower():
-            cases = row[1] + row[2]
-        if state.lower() == "indiana":
-            indiana_risks['cases'] = row[1] + row[2]
+        app.logger.debug("{0} {1} {2} {3} ".format(row[0], state, state.lower() == row[0].lower(), row[0].lower() == "indiana"))
+        if row[0].lower() == state.lower():
+            cases = add_zika_row(row)
+            #cases = row[1] + row[2]
+        if row[0].lower() == "indiana":
+            indiana_risks['cases'] = add_zika_row(row)
+            #indiana_risks['cases'] = row[1] + row[2]
     if cases is None:
         errors['cases'] = "No case data was found for %s." % state
     else:
@@ -172,27 +184,27 @@ def get_result(lat, lng, mydate, state, county=None):
    <table class="tg">
      <tr>
        <th>Risk Factor<br></th>
-       <th>Indiana<br></th>
+       <th>{inloc}<br></th>
        <th>{destination}<br></th>
      </tr>
-     <tr>
-       <td>Population</td>
-       <td class="{inpopclass}">{inpop}</td>
-       <td class="{popclass}">{pop}</td>
-     </tr>
-     """
-    xxx = """
      <tr>
        <td>Cases statewide</td>
        <td class="{incasesclass}">{incases}<br></td>
        <td class="{casesclass}">{cases}</td>
      </tr>
      <tr>
+       <td>Population</td>
+       <td class="{inpopclass}">{inpop}</td>
+       <td class="{popclass}">{pop}</td>
+     </tr>
+   </table>
+     """
+    xxx = """
+     <tr>
        <td>Climate</td>
        <td class="{inclimateclass}">{inclimate}</td>
        <td class="{climateclass}">{climate}</td>
      </tr>
-   </table>
     """
     #"""
     #{destination} has {pop} people.
@@ -214,14 +226,18 @@ def get_result(lat, lng, mydate, state, county=None):
 
     month_name = mydate.strftime("%B")
 
+    inloc = "Indiana"
     destination = state
     pop = risks['state_pop']
     inpop = indiana_risks['state_pop']
     if county:
+        inloc = "Tippecanoe County, Indiana"
         destination = "{0}, {1}".format(county, state)
         pop = risks['county_pop']
         inpop = indiana_risks['county_pop']
+    result_kwargs['inloc'] = inloc
     result_kwargs['destination'] = destination
+
     if pop is not None and inpop is not None:
         popratio = pop * 1.0 / inpop
         if popratio > 2:
@@ -235,8 +251,26 @@ def get_result(lat, lng, mydate, state, county=None):
             popclass = "same"
         result_kwargs['inpopclass'] = inpopclass
         result_kwargs['popclass'] = popclass
-    result_kwargs['pop'] = "{0:,}".format(pop)
-    result_kwargs['inpop'] = "{0:,}".format(inpop)
+    result_kwargs['pop'] = "{0:,}".format(pop) if pop is not None else "-"
+    result_kwargs['inpop'] = "{0:,}".format(inpop) if inpop is not None else "-"
+
+    incases = indiana_risks['cases']
+    cases = risks['cases']
+    if cases is not None and incases is not None:
+        caseratio = cases * 1.0 / incases
+        if caseratio > 2:
+            incaseclass = "better"
+            caseclass = "worse"
+        elif caseratio < 0.5:
+            incaseclass = "worse"
+            caseclass = "better"
+        else:
+            incaseclass = "same"
+            caseclass = "same"
+        result_kwargs['incasesclass'] = incaseclass
+        result_kwargs['casesclass'] = caseclass
+    result_kwargs['cases'] = "{0:,}".format(cases) if cases is not None else "-"
+    result_kwargs['incases'] = "{0:,}".format(incases) if incases is not None else "-"
 
     #if errors['cases']:
         #case_text = errors['cases']
@@ -524,7 +558,7 @@ def get_zika():
 
     def process_row(row):
         for x in 1, 2:
-            row[x] = int(row[x].split()[0].replace(",", ""))
+            row[x] = row[x].split()[0].replace(",", "")
         return row
 
     data = list()
