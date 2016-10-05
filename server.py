@@ -198,6 +198,11 @@ def get_result(lat, lng, mydate, state, county=None):
        <td class="{climateclass}">{climate}</td>
      </tr>
    </table>
+   <ul>
+   <li>{casesummary}</li>
+   <li>{popsummary}</li>
+   <li>Climate summary</li>
+   </ul>
      """
     #"""
     #{destination} has {pop} people.
@@ -231,39 +236,49 @@ def get_result(lat, lng, mydate, state, county=None):
     result_kwargs['inloc'] = inloc
     result_kwargs['destination'] = destination
 
+    popsummary = "No population comparison was available. In general, traveling to a less populous area may reduce your risk."
     if pop is not None and inpop is not None:
         popratio = pop * 1.0 / inpop
         if popratio > 2:
             inpopclass = "better"
             popclass = "worse"
+            popsummary = "{destination} is more populous than {inloc}. You could reduce your risk by traveling to a less populous area."
         elif popratio < 0.5:
             inpopclass = "worse"
             popclass = "better"
+            popsummary = "{destination} is less populous than {inloc}. This may reduce your risk."
         else:
             inpopclass = "same"
             popclass = "same"
+            popsummary = "{destination} and {inloc} have similar populations. You could reduce your risk by traveling to a less populous area."
         result_kwargs['inpopclass'] = inpopclass
         result_kwargs['popclass'] = popclass
     result_kwargs['pop'] = "{0:,}".format(pop) if pop is not None else "-"
     result_kwargs['inpop'] = "{0:,}".format(inpop) if inpop is not None else "-"
+    result_kwargs['popsummary'] = popsummary.format(**result_kwargs)
 
     incases = indiana_risks['cases']
     cases = risks['cases']
+    casesummary = "No case comparison was available. In general, traveling to an area with fewer cases may reduce your risk."
     if cases is not None and incases is not None:
         caseratio = cases * 1.0 / incases
         if caseratio > 2:
             incaseclass = "better"
             caseclass = "worse"
+            casesummary = "{state} has more cases of Zika virus than Indiana. You could reduce your risk by traveling to an area with fewer cases."
         elif caseratio < 0.5:
             incaseclass = "worse"
             caseclass = "better"
+            casesummary = "{state} has fewer cases of Zika virus than Indiana. This may reduce your risk."
         else:
             incaseclass = "same"
             caseclass = "same"
+            casesummary = "{state} and Indiana have similar numbers of Zika virus cases. You could reduce your risk by traveling to an area with fewer cases."
         result_kwargs['incasesclass'] = incaseclass
         result_kwargs['casesclass'] = caseclass
     result_kwargs['cases'] = "{0:,}".format(cases) if cases is not None else "-"
     result_kwargs['incases'] = "{0:,}".format(incases) if incases is not None else "-"
+    result_kwargs['casesummary'] = casesummary.format(state=state)
 
     # Truth table
     #mosquito_risk   mosquito_season risk
@@ -293,7 +308,6 @@ def get_result(lat, lng, mydate, state, county=None):
         else:
             # No mosquito risk
             return 0
-
 
     in_mosquito_risk = parse_risk(**indiana_risks)
     result_kwargs['inclimate'] = mosquito_risk_names[in_mosquito_risk]
