@@ -105,8 +105,7 @@ MyApp.drawLadder = function (destcases, incases) {
 
   var breakpoint = 4;
 
-  var deathColor = 'rgba(156, 165, 196, 0.95)';
-
+  var deathColor = 'rgba(119, 190, 222, 0.95)';
   var deathMarker = {
     color: deathColor,
     line: {
@@ -117,15 +116,25 @@ MyApp.drawLadder = function (destcases, incases) {
     size: 16
   };
 
-
-  var caseColor = 'rgba(211, 172, 167, 0.95)';
+  var caseColor = 'rgba(211, 115, 38, 0.95)';
   var caseMarker = {
     color: caseColor,
     line: {
       color: caseColor,
       width: 1,
     },
-    symbol: 'circle',
+    symbol: 'square',
+    size: 16
+  };
+
+  var caseColorIn = 'rgba(229, 170, 38, 0.95)';
+  var caseMarkerIn = {
+    color: caseColorIn,
+    line: {
+      color: caseColorIn,
+      width: 1,
+    },
+    symbol: 'diamond',
     size: 16
   };
 
@@ -180,7 +189,7 @@ MyApp.drawLadder = function (destcases, incases) {
     type: 'scatter',
     x: [destcases],
     y: [destcases],
-    text: ['Zika Virus Syndrome'],
+    text: ['Zika Virus'],
     textposition: 'center',
     mode: 'markers',
     name: 'Cases per 1M in state',
@@ -192,12 +201,12 @@ MyApp.drawLadder = function (destcases, incases) {
     type: 'scatter',
     x: [incases],
     y: [incases],
-    text: ['Zika Virus Syndrome (IN)'],
+    text: ['Zika Virus (IN)'],
     textposition: 'center',
     mode: 'markers',
     name: 'Cases per 1M (IN)',
     //showlegend: false,
-    marker: caseMarker
+    marker: caseMarkerIn
   };
 
   var data = [smalltrace, largetrace, 
@@ -251,7 +260,7 @@ MyApp.drawLadder = function (destcases, incases) {
     //    b: 50,
     //    t: 80
     //  },
-    //showlegend: false,
+    showlegend: false,
     legend: {
       orientation: 'h',
     },
@@ -283,7 +292,7 @@ MyApp.drawLadder = function (destcases, incases) {
 //          color: caseColor,
 //        },
         bgcolor: 'rgba(255, 255, 255, 0.8)',
-        bordercolor: caseColor,
+        bordercolor: caseColorIn,
         borderwidth: 2,
         showarrow: true,
         arrowwidth: 2,
