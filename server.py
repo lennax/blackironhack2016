@@ -168,19 +168,14 @@ def get_result(lat, lng, mydate, state, county=None):
     if climate_dict['error']:
         errors['climate'] = climate_dict.pop('error')
     else:
-        risks['climate'] = climate_dict
+        risks.update(climate_dict)
 
     in_climate_dict = get_climate_for_station(stationid="USW00014835",
                                               mydate=mydate)
     if not in_climate_dict['error']:
-        indiana_risks['climate'] = in_climate_dict
+        indiana_risks.update(in_climate_dict)
 
-    result_text = """Three major factors determine risk for Zika virus.
-    <ol>
-    <li>How many cases of Zika virus have been reported in the area?</li>
-    <li>How populous is the area?</li>
-    <li>Does the area have mosquitoes and if so, is it mosquito season?</li>
-    </ol>
+    result_text = """
    <table class="tg">
      <tr>
        <th>Risk Factor<br></th>
@@ -197,15 +192,13 @@ def get_result(lat, lng, mydate, state, county=None):
        <td class="{inpopclass}">{inpop}</td>
        <td class="{popclass}">{pop}</td>
      </tr>
-   </table>
-     """
-    xxx = """
      <tr>
        <td>Climate</td>
        <td class="{inclimateclass}">{inclimate}</td>
        <td class="{climateclass}">{climate}</td>
      </tr>
-    """
+   </table>
+     """
     #"""
     #{destination} has {pop} people.
     #The state of {dest_state} has {cases} reported cases of Zika virus.
@@ -271,6 +264,43 @@ def get_result(lat, lng, mydate, state, county=None):
         result_kwargs['casesclass'] = caseclass
     result_kwargs['cases'] = "{0:,}".format(cases) if cases is not None else "-"
     result_kwargs['incases'] = "{0:,}".format(incases) if incases is not None else "-"
+
+    # Truth table
+    #mosquito_risk   mosquito_season risk
+    #True    None    unknown
+    #None    None    unknown
+    #True    True    in season
+    #None    True    in season
+    #True    False   out of season
+    #None    False   out of season
+    #False   False   minimal
+    #False   True    minimal
+    #False   None    minimal
+
+    mosquito_risk_names = ["Minimal", "Unknown", "Out of season", "In season"]
+    mosquito_risk_classes = ["better", "unknown", "better", "worse"]
+    def parse_risk(mosquito_risk, mosquito_season, **kwargs):
+        if mosquito_risk is None or mosquito_risk:
+            if mosquito_season is None:
+                # If mosquito season is unknown, overall risk is unknown
+                return 1
+            elif mosquito_season:
+                # Mosquito season is risk
+                return 3
+            else:
+                # Not mosquito season reduces risk
+                return 2
+        else:
+            # No mosquito risk
+            return 0
+
+
+    in_mosquito_risk = parse_risk(**indiana_risks)
+    result_kwargs['inclimate'] = mosquito_risk_names[in_mosquito_risk]
+    result_kwargs['inclimateclass'] = mosquito_risk_classes[in_mosquito_risk]
+    mosquito_risk = parse_risk(**risks)
+    result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
+    result_kwargs['climateclass'] = mosquito_risk_classes[mosquito_risk]
 
     #if errors['cases']:
         #case_text = errors['cases']
