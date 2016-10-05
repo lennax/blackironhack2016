@@ -357,6 +357,7 @@ MyApp.submitForm = function () {
     
     // Clear result div
     $('#result').text("");
+    $('#ladder').text("");
 
     var destination = $('input[name="destination"]').val();
     //console.log(destination)
@@ -469,12 +470,12 @@ $(document).ready(function () {
   $( document ).ajaxStart(function() {
     MyApp.disableSubmit();
     $('body').addClass("loading");
-    console.log( "Triggered ajaxStart handler." );
+    //console.log( "Triggered ajaxStart handler." );
   });
   $( document ).ajaxStop(function() {
     $('body').removeClass("loading");
     MyApp.checkSubmit();
-    console.log( "Triggered ajaxStop handler." );
+    //console.log( "Triggered ajaxStop handler." );
   });
   
   // Bind enter to submit

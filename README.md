@@ -18,10 +18,10 @@ Keywords
 
 Datasets
 --------
-* NOAA 1981-2010 Climate Normals 
-    - ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/products/temperature/mly-cldd-base57.txt
-    - Text data
-    - The month column corresponding to the date of travel is used
+* NOAA Climate Normals Monthly
+    - http://www.ncdc.noaa.gov/cdo-web/api/v2/
+    - JSON data
+    - Normal annual precipitation, temperature, and growing degree day information is used to assess the suitability of the climate for mosquitoes
     - Data is available for the entire US
 
 * Zika Cases Reported in the United States
@@ -48,14 +48,9 @@ Datasets
 
 Description
 -----------
-This website provides travelers with information and context about the risk of contracting a vector-born zoonotic disease while traveling within the United States.
+This website provides travelers with information and context about the risk of contracting Zika virus and other mosquito-borne diseases while traveling within the United States.
 The user provides their destination and date of travel.
 The website shows the destination on a map and estimates the disease risk on that date.
-<!--The website will use data in the following ways:-->
-
-<!--* Weather data from *Open Climate* will be used to estimate mosquito population; mosquito population has a positive correlation with risk-->
-<!--* Population density of the area from *Data.gov* has a positive correlation with risk-->
-<!--* Statistics about vector-born zoonotic diseases from *Data.gov* will be used to list possible infections in the area-->
 
 * Map View
     1. Y The map is centered on the travel destination
@@ -65,15 +60,15 @@ The website shows the destination on a map and estimates the disease risk on tha
     5. y The map will have visual indicators of heat, precipitation, and population density
 
 * Data Visualization
-    1. Y The page uses a Google Charts gauge to show estimated risk
-    2. N The gauge is not interactive (may add interactive chart of multiple risk factors)
+    1. Y The page uses a color-coded table to show risk components and a Plot.ly graph to show risk of Zika virus in context of other risks
+    2. N The chart has hover but no click interaction
 
 * Interaction Form
     1. Y Information about climate, mosquito activity, and cases of Zika in the state is output
     2. y The user will be able to change the date and destination of travel to see how risk is changed
     3. Y The user inputs their date of travel and destination
-    4. y If the user changes the date and destination of travel, the map will be updated based on the climate and location
-    5. y If the user changes the date and destination of travel, the gauge will be updated based on the risk
+    4. Y If the user changes the date and destination of travel, the map is updated based on the location
+    5. y If the user changes the date and destination of travel, the charts are be updated based on the risk
 
 Build Case
 ----------
@@ -86,6 +81,7 @@ Build Case
     - beautifulsoup4
 
 * Building
+
     sudo apt-get install python python-flask python-pip
     sudo pip install flask-cors
 
@@ -101,3 +97,5 @@ This website was tested on Ubuntu 14.04 using Google Chrome version 53.0.2785.11
 Additional Information
 ----------------------
 In the description section, items marked with an uppercase Y are functional while items marked with a lowercase y have not been implemented.
+
+The URL provided for climate data online was not detailed enough to easily find the REST API. This is largely due to poor design of the NOAA website. I did not know the REST API existed until I saw it in another participant's README.

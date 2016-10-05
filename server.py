@@ -3,7 +3,6 @@
 # STANDARD LIBRARY
 import datetime
 from functools import update_wrapper
-from ftplib import FTP
 import json
 import logging
 import unicodedata
@@ -12,6 +11,7 @@ import urllib2
 # 3RD PARTY LIBRARIES
 from bs4 import BeautifulSoup
 import numpy as np
+import requests
 
 from flask import Flask, jsonify, render_template, request, make_response, current_app
 # from flask_cors import CORS, cross_origin
@@ -31,9 +31,12 @@ app.logger.debug('debug message')
 ####
 
 
-open_climate_ftp = "ftp.ncdc.noaa.gov"
-#"/pub/data/normals/1981-2010/"
+climate_url = "http://www.ncdc.noaa.gov/cdo-web/api/v2/"
+climate_token = "yUvXbVJaOILecTHUTEUEppAxSxHavTJy"
+climate_headers = dict(token=climate_token)
+
 zika_url = "http://www.cdc.gov/zika/intheus/maps-zika-us.html"
+
 census_api_key = "36a6a8b2ee9eafcc4afb7f7948e2724907c628e3"
 census_url = "http://api.census.gov/data/2015/acs1"
 
@@ -164,14 +167,14 @@ def get_result(lat, lng, mydate, state, county=None):
     # Are mosquitoes active in the destination?
         # Is it mosquito season?
     climate_dict = get_climate(latlng=latlng,
-                               mydate=mydate)
+                               month_number=mydate.month)
     if climate_dict['error']:
         errors['climate'] = climate_dict.pop('error')
     else:
         risks.update(climate_dict)
 
-    in_climate_dict = get_climate_for_station(stationid="USW00014835",
-                                              mydate=mydate)
+    in_climate_dict = get_climate(latlng=(40.4237, -86.9212),
+                                  month_number=mydate.month)
     if not in_climate_dict['error']:
         indiana_risks.update(in_climate_dict)
 
@@ -397,48 +400,7 @@ def get_distances(latlng, coord_array):
 
     return lng_diff
 
-def get_climate(latlng, mydate):
-
-    # possibly temporarily use zip codes
-    #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
-
-    # Query NOAA for list of weather stations
-    ftp = FTP(open_climate_ftp)
-    ftp.login()
-    ftp.cwd("/pub/data/normals/1981-2010/")
-
-    station_list = list()
-    # Fixed width
-    # Columns: ID, lat, long, ??, state 2 letter, name, ???, ???
-    ftp.retrlines("RETR station-inventories/allstations.txt",
-                  station_list.append)
-    ftp.quit()
-    coord_array = np.zeros((len(station_list), 2))
-    for x, line in enumerate(station_list):
-        parts = line.split()
-        lat = float(parts[1])
-        lon = float(parts[2])
-        coord_array[x, 0] = lat
-        coord_array[x, 1] = lon
-
-    #    print coord_array[:6]
-
-    # Find closest weather station
-
-    distances = get_distances(latlng, coord_array)
-    # Get the index of the smallest distance
-    closest_index = np.argpartition(distances, 1)[0]
-    closest_row = station_list[closest_index]
-    stationid = closest_row.split()[0]
-
-    # TODO check that the smallest distance is small
-
-    #print stationid
-    app.logger.debug(stationid)
-
-    return get_climate_for_station(stationid=stationid, mydate=mydate)
-
-def get_climate_for_station(stationid, mydate):
+def get_climate(latlng, month_number):
 
     # Are mosquitoes active in the destination?
     # Is it mosquito season?
@@ -446,156 +408,128 @@ def get_climate_for_station(stationid, mydate):
                        mosquito_season=None,
                        error="")
 
-    month_number = mydate.month
+    datatypes = ["MLY-TAVG-NORMAL", "MLY-PRCP-NORMAL", "MLY-GRDD-BASE57"]
 
-    # TODO Get month data for that weather station
-    #        1. Long-term averages of monthly precipitation totals:
-    #  	  mly-prcp-normal.txt
-    #       2. The average number of days per month with snowfall greater than 1 inch:
-    #          mly-snow-avgnds-ge010ti.txt
-    #       3. Daily average base-65 heating degree days:
-    #          dly-htdd-normal.txt.
-    #       4. Daily average base-50 heating degree days:
-    #          dly-htdd-base50.txt
-    #       5. Hourly heat index normals:
-    #          hly-hidx-normal.txt
+    lat, lng = latlng
+    extent = [lat - 0.5, lng - 0.5, lat + 0.5, lng + 0.5]
 
-    #       Variable  Columns  Type
-    #       ----------------------------
-    #       STNID       1- 11  Character
-    #       VALUE1     19- 23  Integer
-    #       FLAG1      24- 24  Character
-    #       - - - - - - - - - - - - - -
-    #       VALUE12    96-100  Integer
-    #       FLAG12    101-101  Character
-    #       ----------------------------
-    #
-    #       These variables have the following definitions:
-    #
-    #       STNID   is the GHCN-Daily station identification code.
-    #       VALUE1  is the January value.
-    #       FLAG1   is the completeness flag for January. See Flags section below.
-    #       - - - -
-    #       Value12 is the December value.
-    #       Flag12  is the completeness flag for December.
+    r = requests.get(climate_url + "stations", headers=climate_headers, params=dict(extent=",".join(str(x) for x in extent), datatypeid=datatypes))
 
-    ftp = FTP(open_climate_ftp)
-    ftp.login()
-    ftp.cwd("/pub/data/normals/1981-2010/")
+    if r.status_code != 200:
+        result_dict['error'] = "error getting stations"
+        return result_dict
 
-    def get_row(filename):
-        row_list = list()
-        ftp.retrlines("RETR {0}".format(filename), row_list.append)
-        for line in row_list:
-            stnid = line[:11]
-            if stnid == stationid:
-                return line
+    result_json = r.json()
 
-    #ftp.retrlines("RETR products/auxiliary/station/{0}-normals.txt".format(stationid))
+    if not result_json:
+        result_dict['error'] = "no station results"
+        return result_dict
 
-    ##### Are mosquitoes active in the destination?
+    station_list = result_json['results']
+    coord_array = np.zeros((len(station_list), 2))
+    for x, line in enumerate(station_list):
+        coord_array[x, 0] = line['latitude']
+        coord_array[x, 1] = line['longitude']
+
+    distances = get_distances(latlng, coord_array)
+    # Get the index of the smallest distance
+    closest_index = np.argpartition(distances, 1)[0]
+    closest_row = station_list[closest_index]
+    print closest_row
+    stationid = closest_row['id']
+    datefmt = "%Y-%m-%d"
+    data_date = datetime.datetime.strptime(closest_row['maxdate'], datefmt)
+    start_date = data_date - datetime.timedelta(days=365*10)
+    start_date = start_date.strftime(datefmt)
+
+    r = requests.get(climate_url + "data", headers=climate_headers,
+                     params=dict(
+                         stationid=stationid,
+                         startdate=start_date,
+                         enddate=closest_row['maxdate'],
+                         datasetid=["NORMAL_MLY"],
+                         datatypeid=datatypes,
+                         limit=36,
+                         includemetadata="false",
+                         )
+                    )
+
+    #(YYYY-MM-DDThh:mm:ss)
+    datetimefmt = datefmt + "T%H:%M:%S"
+
+    if r.status_code != 200:
+        result_dict['error'] = "error getting station data"
+        return result_dict
     
+    result_json = r.json()
+    if not result_json:
+        result_dict['error'] = "no station data results"
+        return result_dict
+
+    data_dict = {k: dict() for k in datatypes}
+    climatedata = result_json['results']
+    for row in climatedata:
+        try:
+            rowdate = datetime.datetime.strptime(row['date'], datetimefmt)
+        except ValueError:
+            app.logger.debug("Invalid datetime %s", row['date'])
+        else:
+            row_month_no = rowdate.month
+            value = row['value']
+            if value < 0:
+                value = 0
+            data_dict[row['datatype']][row_month_no] = value
+
     temp_risk = None
     rain_risk = None
-
+    
     # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4001452/
     # Aedes albopictus is not expected to survive average January temperatures of -5 C (23 F)
-    #    tenths of degrees Fahrenheit for maximum, minimum, average, dew point, heat
-    #    index, wind chill, and air temperature normals and standard deviations.
-    #    e.g., "703" is 70.3F
-    tavg_row = get_row("products/temperature/mly-tavg-normal.txt")
-    if tavg_row is not None:
-        tavg_ints = [int(v[:-1]) * 0.1 for v in tavg_row.split()[1:]]
-        jan_temp = tavg_ints[0]
-        temp_risk = bool(jan_temp > 23.0)
-    else:
-        result_dict['error'] += " No monthly average temperature found."
+    # Tenths of degrees Fahrenheit
+    jan_temp = data_dict['MLY-TAVG-NORMAL'].get(1)
+    if jan_temp is not None:
+        temp_risk = bool(jan_temp * 0.1 > 23.0)
 
     # Aedes albopictus requires a minimum annual rainfall of ~250 mm (9.8 inches)
-    #    tenths of inches for average monthly/seasonal/annual snowfall,
-    #    month-to-date/year-to-date snowfall, and percentiles of snowfall.
-    #    e.g. "39" is 3.9"
-    rain_row = get_row("products/precipitation/ann-prcp-normal.txt")
-    if rain_row is not None:
-        rain_in = int(rain_row.split()[1][:-1]) * 0.1
-        rain_risk = bool(rain_in >= 9.8)
-    else:
-        result_dict['error'] += " No annual precipitation found."
+    # hundredths of inches
+    rain_in = sum(data_dict['MLY-PRCP-NORMAL'].values())
+    rain_risk = bool(rain_in * 0.01 >= 9.8)
 
-    if temp_risk is not None and not temp_risk and rain_risk is not None and not rain_risk:
+    print temp_risk, rain_risk
+
+    if temp_risk and rain_risk:
+        result_dict['mosquito_risk'] = True
+
+    if (temp_risk is not None and not temp_risk) or (rain_risk is not None and not rain_risk):
         result_dict['mosquito_risk'] = False
-
-    # Is it mosquito season?
     else:
-        cooling_value = None
         # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3700474/
         # roughly 100 degree days for Culex
-        # Cooling degree days are equivalent to growing degree days
-        cooling_result = get_row("products/temperature/mly-cldd-base57.txt")
-        #    print cooling_result
-        if cooling_result is not None:
-            cooling_list = cooling_result.split()
-            cooling_ints = [int(v[:-1]) if v[0] !=
-                            "-" else 0 for v in cooling_list[1:]]
-            cumulative_cdd = np.cumsum(cooling_ints)
-            #print cumulative_cdd
-            app.logger.debug(cumulative_cdd)
-            cooling_value = cumulative_cdd[month_number - 1]
-        else:
-            result_dict['error'] += " No cooling degree data found."
+        growing_dict = data_dict['MLY-GRDD-BASE57']
+        growing_ints = [0] * 12
+        for month_idx in range(12):
+            month_val = growing_dict.get(month_idx + 1)
+            if month_val is not None:
+                growing_ints[month_idx] = month_val
+        cumulative_gdd = np.cumsum(growing_ints)
+        growing_value = cumulative_gdd[month_number - 1]
 
-        #cooling_text = "mosquitoes have likely not yet hatched"
         mosquito_season = False
-        if cooling_value > 100:
-            #cooling_text = "mosquitoes have likely hatched"
+        if growing_value > 100:
+            # Tenths of degrees Fahrenheit
+            month_temp = data_dict['MLY-TAVG-NORMAL'].get(month_number)
+            if month_temp is not None:
+                month_temp *= 0.1
 
             # tmin 9.6 C (49.28 F)
             # tmax 37 C (98.6 F)
-            # TODO convert to quadratic
-            month_temp = tavg_ints[month_number - 1]
-
-            #conjunction = "but"
-            #risk = 1
             tmin = 49.28
             tmax = 98.6
+
             if month_temp >= tmin and month_temp <= tmax:
                 mosquito_season = True
-            #if month_temp < tmin:
-                #temp_text = "it is too cold for mosquitoes"
-            #elif month_temp > tmax:
-                #temp_text = "it is too hot for mosquitoes"
-            #else:
-                #conjunction = "and"
-                #temp_text = "it is the right temperature for mosquitoes"
-                #risk = 15
-
-            #cooling_text = " ".join([cooling_text, conjunction, temp_text])
-
         result_dict['mosquito_season'] = mosquito_season
 
-        # Aedes aegypti populations are not necessarily rainfall dependent
-        #    hundredths of inches for average monthly/seasonal/annual precipitation,
-        #    month-to-date/year-to-date precipitation, and percentiles of precipitation.
-        #    e.g., "1" is 0.01" and "1486" is 14.86"
-        #        precip_result = get_row("products/precipitation/mly-prcp-normal.txt")
-        #    #    print precip_result
-        #        precip_list = precip_result.split()
-        #        precip_value = int(precip_list[month_number][:-1]) * 0.01
-
-        #result_text = "The climate at your destination is hospitable to mosquitoes. In {month_name}, {cooling_text}.".format(
-            #cooling_text=cooling_text, month_name=month_name)
-
-        # TODO compute some sort of risk
-        #risk = 15
-
-    #else:
-        #result_text = "The climate at your destination is not hospitable to mosquitoes."
-        #risk = 1
-
-    ftp.quit()
-
-    #result_dict['text'] = result_text
-    #result_dict['risk'] = risk
     return result_dict
 
 def get_zika():
