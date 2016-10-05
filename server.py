@@ -193,7 +193,7 @@ def get_result(lat, lng, mydate, state, county=None):
        <td class="{popclass}">{pop}</td>
      </tr>
      <tr>
-       <td>Climate</td>
+       <td>Mosquitoes</td>
        <td class="{inclimateclass}">{inclimate}</td>
        <td class="{climateclass}">{climate}</td>
      </tr>
@@ -201,7 +201,7 @@ def get_result(lat, lng, mydate, state, county=None):
    <ul>
    <li>{casesummary}</li>
    <li>{popsummary}</li>
-   <li>Climate summary</li>
+   <li>{climatesummary}</li>
    </ul>
      """
     #"""
@@ -315,6 +315,17 @@ def get_result(lat, lng, mydate, state, county=None):
     mosquito_risk = parse_risk(**risks)
     result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
     result_kwargs['climateclass'] = mosquito_risk_classes[mosquito_risk]
+
+    climate_summary = list()
+    if mosquito_risk_names[in_mosquito_risk] == "In season":
+        climate_summary.append("{month_name} is mosquito season in Tippecanoe County, Indiana. You could reduce your risk by leaving Indiana for an area without mosquitoes.")
+    if mosquito_risk_names[mosquito_risk] == "In season":
+        climate_summary.append("{month_name} is mosquito season in {destination}. You could reduce your risk by traveling before or after mosquito season or to a different area without mosquitoes.")
+    if not climate_summary:
+        climate_sentence = "{month_name} is not mosquito season for either Indiana or {state}, so the risk of getting infected by a mosquito is low."
+    else:
+        climate_sentence = " ".join(climate_summary)
+    result_kwargs['climatesummary'] = climate_sentence.format(month_name=month_name, destination=destination, state=state)
 
     #if errors['cases']:
         #case_text = errors['cases']
