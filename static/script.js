@@ -78,7 +78,7 @@ MyApp.drawGauge = function (risk) {
   // setInterval(function () { // data.setValue(0, 1, 40 + Math.round(60 * Math.random())); // chart.draw(data, options); // }, 13000);  
 };
 
-MyApp.drawLadder = function (zcases) {
+MyApp.drawLadder = function (destcases, incases) {
   "use strict";
   
   var cause = [
@@ -162,24 +162,24 @@ MyApp.drawLadder = function (zcases) {
     marker: deathMarker
   };
 
-  var gbsCases = 15;
-  var gbstrace = {
-    type: 'scatter',
-    x: [gbsCases],
-    y: [gbsCases],
-    //y: ['Guillain-Barré Syndrome'],
-    text: ['Guillain-Barré Syndrome'],
-    textposition: 'center',
-    mode: 'markers',
-    name: 'Cases per 1M in USA',
-    //showlegend: false,
-    marker: caseMarker
-  };
+//  var gbsCases = 15;
+//  var gbstrace = {
+//    type: 'scatter',
+//    x: [gbsCases],
+//    y: [gbsCases],
+//    //y: ['Guillain-Barré Syndrome'],
+//    text: ['Guillain-Barré Syndrome'],
+//    textposition: 'center',
+//    mode: 'markers',
+//    name: 'Cases per 1M in USA',
+//    //showlegend: false,
+//    marker: caseMarker
+//  };
 
   var zikatrace = {
     type: 'scatter',
-    x: [zcases],
-    y: [zcases],
+    x: [destcases],
+    y: [destcases],
     text: ['Zika Virus Syndrome'],
     textposition: 'center',
     mode: 'markers',
@@ -187,8 +187,23 @@ MyApp.drawLadder = function (zcases) {
     //showlegend: false,
     marker: caseMarker
   };
+  
+  var zikatrace_in = {
+    type: 'scatter',
+    x: [incases],
+    y: [incases],
+    text: ['Zika Virus Syndrome (IN)'],
+    textposition: 'center',
+    mode: 'markers',
+    name: 'Cases per 1M (IN)',
+    //showlegend: false,
+    marker: caseMarker
+  };
 
-  var data = [smalltrace, largetrace, gbstrace, zikatrace,
+  var data = [smalltrace, largetrace, 
+//              gbstrace,
+              zikatrace,
+              zikatrace_in,
               dummytrace];
 
   var xtickvals = [0.1, 1, 10, 100, 1000];
@@ -241,26 +256,45 @@ MyApp.drawLadder = function (zcases) {
       orientation: 'h',
     },
     annotations: [
+//      {
+//        x: Math.log10(gbsCases),
+//        y: Math.log10(gbsCases),
+//        xref: 'x',
+//        yref: 'y',
+//        text: 'Guillain-Barré Syndrome',
+////        font: {
+////          color: caseColor,
+////        },
+//        bgcolor: 'rgba(255, 255, 255, 0.8)',
+//        bordercolor: caseColor,
+//        showarrow: true,
+//        arrowcolor: 'rgb(67, 67, 67)',
+//        arrowhead: 2,
+//        ax: 100,
+//        ay: 0
+//      },
       {
-        x: Math.log10(gbsCases),
-        y: Math.log10(gbsCases),
+        x: Math.log10(incases),
+        y: Math.log10(incases),
         xref: 'x',
         yref: 'y',
-        text: 'Guillain-Barré Syndrome',
+        text: 'Zika Virus Syndrome (IN)',
 //        font: {
 //          color: caseColor,
 //        },
         bgcolor: 'rgba(255, 255, 255, 0.8)',
         bordercolor: caseColor,
+        borderwidth: 2,
         showarrow: true,
+        arrowwidth: 2,
         arrowcolor: 'rgb(67, 67, 67)',
         arrowhead: 2,
         ax: 100,
-        ay: 0
+        ay: -10
       },
       {
-        x: Math.log10(zcases),
-        y: Math.log10(zcases),
+        x: Math.log10(destcases),
+        y: Math.log10(destcases),
         xref: 'x',
         yref: 'y',
         text: 'Zika Virus Syndrome',
@@ -382,7 +416,8 @@ MyApp.submitForm = function () {
             //alert(data.result);
             //MyApp.drawGauge(data.result.risk);
             console.log(data.result.destrisk);
-            MyApp.drawLadder(data.result.destrisk);
+            console.log(data.result.inrisk);
+            MyApp.drawLadder(data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             $('#result').html(data.result.text);
           }
