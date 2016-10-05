@@ -80,6 +80,7 @@ MyApp.drawGauge = function (risk) {
 
 MyApp.drawLadder = function (zcases) {
   "use strict";
+  
   var cause = [
 'Heart disease',
 'Lung cancer',
@@ -310,6 +311,9 @@ MyApp.submitForm = function () {
   "use strict";
 
   if (MyApp.validData()) {
+    
+    // Clear result div
+    $('#result').text("");
 
     var destination = $('input[name="destination"]').val();
     //console.log(destination)
@@ -369,7 +373,7 @@ MyApp.submitForm = function () {
           county: county,
         },
         function (data) {
-          if (data.result.error != 0) {
+          if (data.result.error) {
             $('#result').text("Error: " + data.result.error);
             return 1
           } else {
@@ -377,10 +381,10 @@ MyApp.submitForm = function () {
             $('input[name=destination]').focus().select();
             //alert(data.result);
             //MyApp.drawGauge(data.result.risk);
-            // FIXME correct behavior on zero
-            MyApp.drawLadder(1);
+            console.log(data.result.destrisk);
+            MyApp.drawLadder(data.result.destrisk);
             //console.log(data.result.text)
-            $('#result').text(data.result.text);
+            $('#result').html(data.result.text);
           }
         });
     });

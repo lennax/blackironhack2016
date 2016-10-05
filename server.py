@@ -30,6 +30,7 @@ app.logger.debug('debug message')
 
 ####
 
+
 open_climate_ftp = "ftp.ncdc.noaa.gov"
 #"/pub/data/normals/1981-2010/"
 zika_url = "http://www.cdc.gov/zika/intheus/maps-zika-us.html"
@@ -85,11 +86,11 @@ def calculate():
                   county=county)
     return jsonify(result=get_result(**kwargs))
 
-def get_result(lat, lng, mydate, state=None, county=None):
+def get_result(lat, lng, mydate, state, county=None):
 
     result_dict = dict(text=None,
-                       risk=None,
-                       zcases=None,
+                       destrisk=None,
+                       inrisk=None,
                        error=0)
   
     latlng = (lat, lng)
@@ -102,47 +103,184 @@ def get_result(lat, lng, mydate, state=None, county=None):
         # Are mosquitoes active in the destination?
             # Is it mosquito season?
 
+    errors = dict(cases=None,
+                  pop=None,
+                  climate=None)
+
+    risks = dict(cases=None,
+                 state_pop=None,
+                 county_pop=None,
+                 mosquito_risk=None,
+                 mosquito_season=None)
+
+    indiana_risks = dict(cases=None,
+                         state_pop=None,
+                         county_pop=None,
+                         mosquito_risk=None,
+                         mosquito_season=None)
+
+    # How many people are infected in the state?
     app.logger.debug(state)
     cases = None
-    pop_sentence = None
-    if state is not None:
-        app.logger.debug("getting zika data")
-        zika_data = get_zika()
-        for row in zika_data[1:]:
-            app.logger.debug("{0} {1} {2}".format(row[0], state, state.lower() == row[0].lower()))
-            if state.lower() == row[0].lower():
-                cases = row[1] + row[2]
+    app.logger.debug("getting zika data")
+    zika_data = get_zika()
+    for row in zika_data[1:]:
+        app.logger.debug("{0} {1} {2}".format(row[0], state, state.lower() == row[0].lower()))
+        if state.lower() == row[0].lower():
+            cases = row[1] + row[2]
+        if state.lower() == "indiana":
+            indiana_risks['cases'] = row[1] + row[2]
+    if cases is None:
+        errors['cases'] = "No case data was found for %s." % state
+    else:
+        risks['cases'] = cases
 
-        pop_dict = get_population(state=state, county=county)
-        if not pop_dict['error']:
-            if county is not None and pop_dict['county_pop'] is not None:
-                pop_sentence = "{0}, {1} has {county_pop} residents.".format(county, state, **pop_dict)
-            elif pop_dict['state_pop'] is not None:
-                pop_sentence = "{0} has {state_pop} residents.".format(state, **pop_dict)
+    # How populous is the destination?
+    pop_dict = get_population(state=state, county=county)
+    if not pop_dict.pop('error'):
+        risks.update(pop_dict)
+    else:
+        pop_err = "No population data was found for %s." % state
+        if county is not None:
+            pop_err += " county %s" % county
+        errors['pop'] = pop_err
 
+    in_pop_dict = get_population(state="indiana", county="tippecanoe")
+    if not in_pop_dict.pop('error'):
+        indiana_risks.update(in_pop_dict)
+
+    # Are mosquitoes active in the destination?
+        # Is it mosquito season?
     climate_dict = get_climate(latlng=latlng,
                                mydate=mydate)
     if climate_dict['error']:
-        return climate_dict
+        errors['climate'] = climate_dict.pop('error')
     else:
-        result_dict.update(climate_dict)
+        risks['climate'] = climate_dict
 
-    result_text = result_dict['text']
-    risk = result_dict['risk']
+    in_climate_dict = get_climate_for_station(stationid="USW00014835",
+                                              mydate=mydate)
+    if not in_climate_dict['error']:
+        indiana_risks['climate'] = in_climate_dict
 
-    # TODO handle missing data classes better
-    if state is not None and cases is not None:
-        result_text += " {0} total cases of Zika have been reported in {1}.".format(cases, state)
-        # TODO logistic function
-        risk = min(100, risk * 2)
+    result_text = """Three major factors determine risk for Zika virus.
+    <ol>
+    <li>How many cases of Zika virus have been reported in the area?</li>
+    <li>How populous is the area?</li>
+    <li>Does the area have mosquitoes and if so, is it mosquito season?</li>
+    </ol>
+   <table class="tg">
+     <tr>
+       <th>Risk Factor<br></th>
+       <th>Indiana<br></th>
+       <th>{destination}<br></th>
+     </tr>
+     <tr>
+       <td>Population</td>
+       <td class="{inpopclass}">{inpop}</td>
+       <td class="{popclass}">{pop}</td>
+     </tr>
+     """
+    xxx = """
+     <tr>
+       <td>Cases statewide</td>
+       <td class="{incasesclass}">{incases}<br></td>
+       <td class="{casesclass}">{cases}</td>
+     </tr>
+     <tr>
+       <td>Climate</td>
+       <td class="{inclimateclass}">{inclimate}</td>
+       <td class="{climateclass}">{climate}</td>
+     </tr>
+   </table>
+    """
+    #"""
+    #{destination} has {pop} people.
+    #The state of {dest_state} has {cases} reported cases of Zika virus.
+    #{mosquito_phrase}
+    #Compared to Indiana, your destination {cases_cmp}.
+    #{case_vs_pop_prep}, {pop_cmp}.
+    #{mosquito_cmp_phrase}
+    #"""
 
-    if pop_sentence is not None:
-        result_text = result_text + " " + pop_sentence
+    app.logger.debug(risks)
 
-    result_dict['text'] = result_text
-    result_dict['risk'] = risk
+    result_kwargs = dict()
+
+    # Initialize classes to "unknown"
+    for datatype in "cases", "pop", "climate":
+        for prefix in "", "in":
+            result_kwargs['{0}{1}class'.format(prefix, datatype)] = "unknown"
+
+    month_name = mydate.strftime("%B")
+
+    destination = state
+    pop = risks['state_pop']
+    inpop = indiana_risks['state_pop']
+    if county:
+        destination = "{0}, {1}".format(county, state)
+        pop = risks['county_pop']
+        inpop = indiana_risks['county_pop']
+    result_kwargs['destination'] = destination
+    if pop is not None and inpop is not None:
+        popratio = pop * 1.0 / inpop
+        if popratio > 2:
+            inpopclass = "better"
+            popclass = "worse"
+        elif popratio < 0.5:
+            inpopclass = "worse"
+            popclass = "better"
+        else:
+            inpopclass = "same"
+            popclass = "same"
+        result_kwargs['inpopclass'] = inpopclass
+        result_kwargs['popclass'] = popclass
+    result_kwargs['pop'] = "{0:,}".format(pop)
+    result_kwargs['inpop'] = "{0:,}".format(inpop)
+
+    #if errors['cases']:
+        #case_text = errors['cases']
+    #else:
+        #case_text = "{0} has {1} reported cases of Zika virus".format(state, risks['cases'])
+    #result_text.append(case_text)
+
+    #result_kwargs = dict(dest_state=state)
+    #destination = state
+    #pop = risks['pop']['state_pop']
+    #if county:
+        #destination = "{0}, {1}".format(county, state)
+        #pop = risks['pop']['county_pop']
+    #result_kwargs['destination'] = destination
+    #result_kwargs['pop'] = pop
+
+    # Needed results:
+        # Text summary
+        # destination cases per 1M
+        # Indiana cases per 1M
+
+    ## TODO handle missing data classes better
+    #if state is not None and cases is not None:
+        #result_text += " {0} total cases of Zika have been reported in {1}.".format(cases, state)
+        ## TODO logistic function
+        #risk = min(100, risk * 2)
+
+    #if pop_sentence is not None:
+        #result_text = result_text + " " + pop_sentence
+
+    result_dict['text'] = result_text.format(**result_kwargs)
+    result_dict['destrisk'] = rate_per_mil(**risks)
+    result_dict['inrisk'] = rate_per_mil(**indiana_risks)
 
     return result_dict
+
+def rate_per_mil(cases, state_pop, **kwargs):
+    if cases is not None and state_pop:
+        # Pseudocount
+        if cases == 0:
+            cases = 1
+        rate = cases * 1.0 / state_pop
+        rate_per_m = rate * 1000000
+        return rate_per_m
 
 # radius of Earth in miles
 earth_radius = 3958.75
@@ -171,13 +309,6 @@ def get_distances(latlng, coord_array):
 
 def get_climate(latlng, mydate):
 
-    result_dict = dict(text=None,
-                       risk=None,
-                       error="")
-
-    month_number = mydate.month
-    month_name = mydate.strftime("%B")
-
     # possibly temporarily use zip codes
     #    ftp://ftp.ncdc.noaa.gov/pub/data/normals/1981-2010/station-inventories/zipcodes-normals-stations.txt
 
@@ -191,6 +322,7 @@ def get_climate(latlng, mydate):
     # Columns: ID, lat, long, ??, state 2 letter, name, ???, ???
     ftp.retrlines("RETR station-inventories/allstations.txt",
                   station_list.append)
+    ftp.quit()
     coord_array = np.zeros((len(station_list), 2))
     for x, line in enumerate(station_list):
         parts = line.split()
@@ -209,8 +341,22 @@ def get_climate(latlng, mydate):
     closest_row = station_list[closest_index]
     stationid = closest_row.split()[0]
 
+    # TODO check that the smallest distance is small
+
     #print stationid
     app.logger.debug(stationid)
+
+    return get_climate_for_station(stationid=stationid, mydate=mydate)
+
+def get_climate_for_station(stationid, mydate):
+
+    # Are mosquitoes active in the destination?
+    # Is it mosquito season?
+    result_dict = dict(mosquito_risk=None,
+                       mosquito_season=None,
+                       error="")
+
+    month_number = mydate.month
 
     # TODO Get month data for that weather station
     #        1. Long-term averages of monthly precipitation totals:
@@ -243,6 +389,10 @@ def get_climate(latlng, mydate):
     #       Value12 is the December value.
     #       Flag12  is the completeness flag for December.
 
+    ftp = FTP(open_climate_ftp)
+    ftp.login()
+    ftp.cwd("/pub/data/normals/1981-2010/")
+
     def get_row(filename):
         row_list = list()
         ftp.retrlines("RETR {0}".format(filename), row_list.append)
@@ -252,6 +402,8 @@ def get_climate(latlng, mydate):
                 return line
 
     #ftp.retrlines("RETR products/auxiliary/station/{0}-normals.txt".format(stationid))
+
+    ##### Are mosquitoes active in the destination?
     
     temp_risk = None
     rain_risk = None
@@ -280,8 +432,11 @@ def get_climate(latlng, mydate):
     else:
         result_dict['error'] += " No annual precipitation found."
 
-    if temp_risk and rain_risk:
+    if temp_risk is not None and not temp_risk and rain_risk is not None and not rain_risk:
+        result_dict['mosquito_risk'] = False
 
+    # Is it mosquito season?
+    else:
         cooling_value = None
         # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3700474/
         # roughly 100 degree days for Culex
@@ -299,49 +454,58 @@ def get_climate(latlng, mydate):
         else:
             result_dict['error'] += " No cooling degree data found."
 
-        cooling_text = "mosquitoes have likely not yet hatched"
+        #cooling_text = "mosquitoes have likely not yet hatched"
+        mosquito_season = False
         if cooling_value > 100:
-            cooling_text = "mosquitoes have likely hatched"
+            #cooling_text = "mosquitoes have likely hatched"
 
             # tmin 9.6 C (49.28 F)
             # tmax 37 C (98.6 F)
             # TODO convert to quadratic
             month_temp = tavg_ints[month_number - 1]
 
-            conjunction = "but"
-            risk = 1
-            if month_temp < 49.28:
-                temp_text = "it is too cold for mosquitoes"
-            elif month_temp > 98.6:
-                temp_text = "it is too hot for mosquitoes"
-            else:
-                conjunction = "and"
-                temp_text = "it is the right temperature for mosquitoes"
-                risk = 15
+            #conjunction = "but"
+            #risk = 1
+            tmin = 49.28
+            tmax = 98.6
+            if month_temp >= tmin and month_temp <= tmax:
+                mosquito_season = True
+            #if month_temp < tmin:
+                #temp_text = "it is too cold for mosquitoes"
+            #elif month_temp > tmax:
+                #temp_text = "it is too hot for mosquitoes"
+            #else:
+                #conjunction = "and"
+                #temp_text = "it is the right temperature for mosquitoes"
+                #risk = 15
 
-            cooling_text = " ".join([cooling_text, conjunction, temp_text])
+            #cooling_text = " ".join([cooling_text, conjunction, temp_text])
+
+        result_dict['mosquito_season'] = mosquito_season
 
         # Aedes aegypti populations are not necessarily rainfall dependent
-    #    hundredths of inches for average monthly/seasonal/annual precipitation,
-    #    month-to-date/year-to-date precipitation, and percentiles of precipitation.
-    #    e.g., "1" is 0.01" and "1486" is 14.86"
-    #        precip_result = get_row("products/precipitation/mly-prcp-normal.txt")
-    #    #    print precip_result
-    #        precip_list = precip_result.split()
-    #        precip_value = int(precip_list[month_number][:-1]) * 0.01
+        #    hundredths of inches for average monthly/seasonal/annual precipitation,
+        #    month-to-date/year-to-date precipitation, and percentiles of precipitation.
+        #    e.g., "1" is 0.01" and "1486" is 14.86"
+        #        precip_result = get_row("products/precipitation/mly-prcp-normal.txt")
+        #    #    print precip_result
+        #        precip_list = precip_result.split()
+        #        precip_value = int(precip_list[month_number][:-1]) * 0.01
 
-        result_text = "The climate at your destination is hospitable to mosquitoes. In {month_name}, {cooling_text}.".format(
-            cooling_text=cooling_text, month_name=month_name)
+        #result_text = "The climate at your destination is hospitable to mosquitoes. In {month_name}, {cooling_text}.".format(
+            #cooling_text=cooling_text, month_name=month_name)
 
         # TODO compute some sort of risk
-        risk = 15
+        #risk = 15
 
-    else:
-        result_text = "The climate at your destination is not hospitable to mosquitoes."
-        risk = 1
+    #else:
+        #result_text = "The climate at your destination is not hospitable to mosquitoes."
+        #risk = 1
 
-    result_dict['text'] = result_text
-    result_dict['risk'] = risk
+    ftp.quit()
+
+    #result_dict['text'] = result_text
+    #result_dict['risk'] = risk
     return result_dict
 
 def get_zika():
@@ -377,14 +541,11 @@ def get_zika():
 
     return data
 
-def get_population(state=None, county=None):
+def get_population(state, county=None):
+
     result = dict(error=None,
                   state_pop=None,
                   county_pop=None)
-
-    if state is None:
-        result['error'] = "No population data available."
-        return result
 
     kwargs = dict(key=census_api_key)
     state_param = "?get=NAME,B01001_001E&for=state:*&key={key}".format(**kwargs)
@@ -399,12 +560,9 @@ def get_population(state=None, county=None):
     state_number = None
     for row in state_data[1:]:
         if row[name_index].lower() == state.lower():
-            if county is None:
-                result['state_pop'] = row[pop_index]
-                return result
-            else:
-                state_number = row[number_index]
-                break
+            result['state_pop'] = row[pop_index]
+            state_number = row[number_index]
+            break
 
     if state_number is not None and county is not None:
         county_param = "?get=NAME,B01001_001E&for=county:*&in=state:{state}&key={key}".format(state=state_number, **kwargs)
@@ -422,7 +580,23 @@ def get_population(state=None, county=None):
         for row in county_data[1:]:
             if row[c_name_index].lower().startswith(county.lower()):
                 result['county_pop'] = row[c_pop_index]
-                return result
+                break
+
+    errors = list()
+    # Cast populations to integer
+    if result['state_pop'] is not None:
+        try:
+            result['state_pop'] = int(result['state_pop'])
+        except ValueError:
+            errors.append("Incorrectly formatted state population")
+    if result['county_pop'] is not None:
+        try:
+            result['county_pop'] = int(result['county_pop'])
+        except ValueError:
+            errors.append("Incorrectly formatted county population")
+
+    if errors:
+        result['error'] = errors
 
     return result
 
