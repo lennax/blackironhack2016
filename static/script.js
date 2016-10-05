@@ -465,8 +465,19 @@ $(document).ready(function () {
   // Bind button click to submit
   $('input#submit').bind('click', MyApp.submitForm);
 
+  // Loading animation code
+  $( document ).ajaxStart(function() {
+    MyApp.disableSubmit();
+    $('body').addClass("loading");
+    console.log( "Triggered ajaxStart handler." );
+  });
+  $( document ).ajaxStop(function() {
+    $('body').removeClass("loading");
+    MyApp.checkSubmit();
+    console.log( "Triggered ajaxStop handler." );
+  });
+  
   // Bind enter to submit
-  // FIXME require input validation
   $('input[type=text]').bind('keydown', function (e) {
     if (e.keyCode == 13) {
       MyApp.submitForm(e);

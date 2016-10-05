@@ -50,3 +50,17 @@ body {
 .tg td.better {
     background-color:#bfffba;
 }
+
+.spinner {
+    display:    none;
+}
+
+.spinner img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.loading .spinner {
+    display: block;
+}
