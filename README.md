@@ -83,7 +83,8 @@ Build Case
 * Building
 
     sudo apt-get install python python-flask python-pip
-    sudo pip install flask-cors
+
+    sudo pip install -r requirements.txt
 
 * Usage
     1. Start the flask server with `python server.py`
