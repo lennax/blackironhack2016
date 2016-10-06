@@ -4,11 +4,7 @@ README
 Travel Risk Evaluation
 ----------------------
 
-Copyright 2016 Lenna X. Peterson
-
-https://www.github.com/lennax
-
-arklenna@gmail.com
+[REDACTED]
 
 Keywords
 --------
