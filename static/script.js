@@ -1,5 +1,5 @@
 /**
-Copyright 2016 Lenna X. Peterson
+ * [ REDACTED ]
 **/
 
 if (typeof MYAPPLICATION === "undefined") {
