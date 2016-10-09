@@ -1,6 +1,6 @@
 /**
  * [ REDACTED ]
-**/
+ **/
 
 if (typeof MYAPPLICATION === "undefined") {
   var MyApp = {};
@@ -388,6 +388,44 @@ MyApp.drawLadder = function (destcases, incases) {
   Plotly.newPlot('ladder', data, layout);
 };
 
+MyApp.setUpTangle = function (divId, risks, inrisks) {
+
+  var element = document.getElementById(divId);
+
+  var months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+  ];
+
+  Tangle.formats.month = function (value) { // formats 0.42 as "42%"
+    return months[value];
+  };
+
+  var tangle = new Tangle(element, {
+    initialize: function () {
+      this.month = new Date().getMonth();
+    },
+    update: function () {
+      if (risks != null) {
+        this.risk = risks[this.month];
+      }
+      if (inrisks != null) {
+        this.inrisk = inrisks[this.month];
+      }
+    }
+  });
+};
+
 MyApp.geocoder = new google.maps.Geocoder();
 
 // Geocoding promise
@@ -415,6 +453,7 @@ MyApp.submitForm = function () {
     // Clear result div
     $('#result').text("");
     $('#ladder').text("");
+    $('#mosquitorisk').text("");
 
     var destination = $('input[name="destination"]').val();
     //console.log(destination)
@@ -480,10 +519,32 @@ MyApp.submitForm = function () {
           } else {
             console.log(data.result);
             $('input[name=destination]').focus().select();
-            //alert(data.result);
+            console.log(data.result.destrisk_arr);
+            console.log(data.result.inrisk_arr);
+            var riskHtml = 'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos '
+            var eitherRisk = 0;
+            if (data.result.inrisk_arr != null) {
+              riskHtml += '<span data-var="inrisk"></span> in season in Indiana'
+              eitherRisk += 1;
+            }            
+            if (data.result.destrisk_arr != null) {
+              if (eitherRisk) {
+                riskHtml += " and "
+              }
+              riskHtml += '<span data-var="risk"></span> in season in '
+              riskHtml += state 
+              eitherRisk += 1;
+            };
+            if (eitherRisk) {
+              riskHtml += "."
+              $('#mosquitorisk').html(riskHtml);
+              MyApp.setUpTangle("mosquitorisk", data.result.destrisk_arr, data.result.inrisk_arr);
+            }
+//            $('#mosquitorisk').html('In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos  and <span data-var="risk"></span> in season in ' + state + '.')
+           
             //MyApp.drawGauge(data.result.risk);
-            console.log(data.result.destrisk);
-            console.log(data.result.inrisk);
+            //console.log(data.result.destrisk);
+            //console.log(data.result.inrisk);
             MyApp.drawLadder(data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             $('#result').html(data.result.text);
