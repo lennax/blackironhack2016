@@ -81,7 +81,6 @@ def calculate():
         msg = ", ".join(errors)
         return jsonify(result=dict(error=msg))
 
-#    print destination
     kwargs = dict(lat=lat,
                   lng=lng,
                   mydate=parsed_date,
@@ -94,10 +93,11 @@ def get_result(lat, lng, mydate, state, county=None):
     result_dict = dict(text=None,
                        destrisk=None,
                        inrisk=None,
+                       destrisk_arr=None,
+                       inrisk_arr=None,
                        error=0)
   
     latlng = (lat, lng)
-    #print latlng
     app.logger.debug(latlng)
 
     # Risk factors:
@@ -165,16 +165,14 @@ def get_result(lat, lng, mydate, state, county=None):
         indiana_risks.update(in_pop_dict)
 
     # Are mosquitoes active in the destination?
-        # Is it mosquito season?
-    climate_dict = get_climate(latlng=latlng,
-                               month_number=mydate.month)
+    # Is it mosquito season?
+    climate_dict = get_climate(latlng=latlng)
     if climate_dict['error']:
         errors['climate'] = climate_dict.pop('error')
     else:
         risks.update(climate_dict)
 
-    in_climate_dict = get_climate(latlng=(40.4237, -86.9212),
-                                  month_number=mydate.month)
+    in_climate_dict = get_climate(latlng=(40.4237, -86.9212))
     if not in_climate_dict['error']:
         indiana_risks.update(in_climate_dict)
 
@@ -296,6 +294,7 @@ def get_result(lat, lng, mydate, state, county=None):
     #False   True    minimal
     #False   None    minimal
 
+    month_number = mydate.month
     mosquito_risk_names = ["Minimal", "Unknown", "Out of season", "In season"]
     mosquito_risk_classes = ["better", "unknown", "better", "worse"]
     def parse_risk(mosquito_risk, mosquito_season, **kwargs):
@@ -303,7 +302,7 @@ def get_result(lat, lng, mydate, state, county=None):
             if mosquito_season is None:
                 # If mosquito season is unknown, overall risk is unknown
                 return 1
-            elif mosquito_season:
+            elif mosquito_season[month_number]:
                 # Mosquito season is risk
                 return 3
             else:
@@ -313,10 +312,20 @@ def get_result(lat, lng, mydate, state, county=None):
             # No mosquito risk
             return 0
 
+    risk_names = ["are not", "are"]
     in_mosquito_risk = parse_risk(**indiana_risks)
+    if indiana_risks['mosquito_season'] is not None:
+        inrisk_arr = [risk_names[v] for v in indiana_risks['mosquito_season']]
+        result_dict['inrisk_arr'] = inrisk_arr
+    app.logger.debug(result_dict['inrisk_arr'])
     result_kwargs['inclimate'] = mosquito_risk_names[in_mosquito_risk]
     result_kwargs['inclimateclass'] = mosquito_risk_classes[in_mosquito_risk]
+
     mosquito_risk = parse_risk(**risks)
+    if risks['mosquito_season'] is not None:
+        risk_arr = [risk_names[v] for v in risks['mosquito_season']]
+        result_dict['destrisk_arr'] = risk_arr
+    app.logger.debug('destrisk_arr')
     result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
     result_kwargs['climateclass'] = mosquito_risk_classes[mosquito_risk]
 
@@ -400,7 +409,7 @@ def get_distances(latlng, coord_array):
 
     return lng_diff
 
-def get_climate(latlng, month_number):
+def get_climate(latlng):
 
     # Are mosquitoes active in the destination?
     # Is it mosquito season?
@@ -435,7 +444,6 @@ def get_climate(latlng, month_number):
     # Get the index of the smallest distance
     closest_index = np.argpartition(distances, 1)[0]
     closest_row = station_list[closest_index]
-    print closest_row
     stationid = closest_row['id']
     datefmt = "%Y-%m-%d"
     data_date = datetime.datetime.strptime(closest_row['maxdate'], datefmt)
@@ -495,7 +503,6 @@ def get_climate(latlng, month_number):
     rain_in = sum(data_dict['MLY-PRCP-NORMAL'].values())
     rain_risk = bool(rain_in * 0.01 >= 9.8)
 
-    print temp_risk, rain_risk
 
     if temp_risk and rain_risk:
         result_dict['mosquito_risk'] = True
@@ -505,29 +512,38 @@ def get_climate(latlng, month_number):
     else:
         # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3700474/
         # roughly 100 degree days for Culex
-        growing_dict = data_dict['MLY-GRDD-BASE57']
-        growing_ints = [0] * 12
-        for month_idx in range(12):
-            month_val = growing_dict.get(month_idx + 1)
-            if month_val is not None:
-                growing_ints[month_idx] = month_val
+        #growing_dict = data_dict['MLY-GRDD-BASE57']
+        #growing_ints = [0] * 12
+        #for month_idx in range(12):
+            #month_val = growing_dict.get(month_idx + 1)
+            #if month_val is not None:
+                #growing_ints[month_idx] = month_val
+        growing_ints = np.array([data_dict['MLY-GRDD-BASE57'].get(m + 1, 0) for m in range(12)])
         cumulative_gdd = np.cumsum(growing_ints)
-        growing_value = cumulative_gdd[month_number - 1]
+        #growing_value = cumulative_gdd[month_number - 1]
+        growing_bool = cumulative_gdd > 100
 
-        mosquito_season = False
-        if growing_value > 100:
-            # Tenths of degrees Fahrenheit
-            month_temp = data_dict['MLY-TAVG-NORMAL'].get(month_number)
-            if month_temp is not None:
-                month_temp *= 0.1
+        # tmin 9.6 C (49.28 F)
+        # tmax 37 C (98.6 F)
+        tmin = 49.28
+        tmax = 98.6
 
-            # tmin 9.6 C (49.28 F)
-            # tmax 37 C (98.6 F)
-            tmin = 49.28
-            tmax = 98.6
+        # Tenths of degrees Fahrenheit
+        month_temps = np.array([data_dict['MLY-TAVG-NORMAL'].get(m + 1) for m in range(12)]) * 0.1
+        month_bool = (month_temps >= tmin) & (month_temps <= tmax)
 
-            if month_temp >= tmin and month_temp <= tmax:
-                mosquito_season = True
+        mosquito_season = growing_bool & month_bool
+
+        #mosquito_season = False
+        #if growing_value > 100:
+            ## Tenths of degrees Fahrenheit
+            #month_temp = data_dict['MLY-TAVG-NORMAL'].get(month_number)
+            #if month_temp is not None:
+                #month_temp *= 0.1
+
+
+            #if month_temp >= tmin and month_temp <= tmax:
+                #mosquito_season = True
         result_dict['mosquito_season'] = mosquito_season
 
     return result_dict
