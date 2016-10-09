@@ -102,6 +102,11 @@ MyApp.initMap = function () {
     infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
     infowindow.open(map, marker);
   });
+  
+  // Default data
+  document.getElementById('date').valueAsDate = new Date();
+  document.getElementById('destination').value = "Miami, FL";
+  MyApp.submitForm();
 };
 
 MyApp.drawGauge = function (risk) {
@@ -378,7 +383,7 @@ MyApp.drawLadder = function (destcases, incases) {
         ay: -10
       }
     ],
-    width: 600,
+    width: 500,
     height: 400,
     paper_bgcolor: 'rgb(254, 247, 234)',
     plot_bgcolor: 'rgb(254, 247, 234)',
@@ -540,7 +545,6 @@ MyApp.submitForm = function () {
               $('#mosquitorisk').html(riskHtml);
               MyApp.setUpTangle("mosquitorisk", data.result.destrisk_arr, data.result.inrisk_arr);
             }
-//            $('#mosquitorisk').html('In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos  and <span data-var="risk"></span> in season in ' + state + '.')
            
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
@@ -599,7 +603,7 @@ $(document).ready(function () {
   });
 
   // Put cursor into first input box
-  $('input[name=destination]').focus();
+  //$('input[name=destination]').focus();
 
 
 });
