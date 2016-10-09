@@ -107,6 +107,11 @@ MyApp.initMap = function () {
 MyApp.drawGauge = function (risk) {
   "use strict";
 
+  // Load Google chart package
+  google.charts.load('current', {
+    'packages': ['gauge']
+  });
+
   var data = google.visualization.arrayToDataTable([
     ['Label', 'Value'],
     ['Risk', risk]
@@ -501,11 +506,6 @@ $(document).ready(function () {
     //console.log("click");
     e.preventDefault();
     $(this).tab('show');
-  });
-
-  // Load Google chart package
-  google.charts.load('current', {
-    'packages': ['gauge']
   });
 
   // Load map
