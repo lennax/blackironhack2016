@@ -140,7 +140,7 @@ MyApp.drawGauge = function (risk) {
   // setInterval(function () { // data.setValue(0, 1, 40 + Math.round(60 * Math.random())); // chart.draw(data, options); // }, 13000);  
 };
 
-MyApp.drawLadder = function (div, destcases, incases) {
+MyApp.drawLadder = function (div) {
   "use strict";
 
   var cause = [
@@ -175,28 +175,6 @@ MyApp.drawLadder = function (div, destcases, incases) {
       width: 1,
     },
     symbol: 'circle',
-    size: 16
-  };
-
-  var caseColor = 'rgba(211, 115, 38, 0.95)';
-  var caseMarker = {
-    color: caseColor,
-    line: {
-      color: caseColor,
-      width: 1,
-    },
-    symbol: 'square',
-    size: 16
-  };
-
-  var caseColorIn = 'rgba(229, 170, 38, 0.95)';
-  var caseMarkerIn = {
-    color: caseColorIn,
-    line: {
-      color: caseColorIn,
-      width: 1,
-    },
-    symbol: 'diamond',
     size: 16
   };
 
@@ -247,34 +225,8 @@ MyApp.drawLadder = function (div, destcases, incases) {
   //    marker: caseMarker
   //  };
 
-  var zikatrace = {
-    type: 'scatter',
-    x: [destcases],
-    y: [destcases],
-    text: ['Zika Virus'],
-    textposition: 'center',
-    mode: 'markers',
-    name: 'Cases per 1M in state',
-    //showlegend: false,
-    marker: caseMarker
-  };
-
-  var zikatrace_in = {
-    type: 'scatter',
-    x: [incases],
-    y: [incases],
-    text: ['Zika Virus (IN)'],
-    textposition: 'center',
-    mode: 'markers',
-    name: 'Cases per 1M (IN)',
-    //showlegend: false,
-    marker: caseMarkerIn
-  };
-
   var data = [smalltrace, largetrace,
 //              gbstrace,
-              zikatrace,
-              zikatrace_in,
               dummytrace];
 
   var xtickvals = [0.1, 1, 10, 100, 1000];
@@ -326,24 +278,69 @@ MyApp.drawLadder = function (div, destcases, incases) {
     legend: {
       orientation: 'h',
     },
+
+    width: 500,
+    height: 400,
+    paper_bgcolor: 'rgb(254, 247, 234)',
+    plot_bgcolor: 'rgb(254, 247, 234)',
+    //  hovermode: 'closest'
+  };
+
+  Plotly.newPlot(div, data, layout);
+};
+
+MyApp.updateLadder = function(div, destcases, incases) {
+  
+  var caseColor = 'rgba(211, 115, 38, 0.95)';
+  var caseMarker = {
+    color: caseColor,
+    line: {
+      color: caseColor,
+      width: 1,
+    },
+    symbol: 'square',
+    size: 16
+  };
+
+  var caseColorIn = 'rgba(229, 170, 38, 0.95)';
+  var caseMarkerIn = {
+    color: caseColorIn,
+    line: {
+      color: caseColorIn,
+      width: 1,
+    },
+    symbol: 'diamond',
+    size: 16
+  };
+  
+  var zikatrace = {
+    type: 'scatter',
+    x: [destcases],
+    y: [destcases],
+    text: ['Zika Virus'],
+    textposition: 'center',
+    mode: 'markers',
+    name: 'Cases per 1M in state',
+    //showlegend: false,
+    marker: caseMarker
+  };
+
+  var zikatrace_in = {
+    type: 'scatter',
+    x: [incases],
+    y: [incases],
+    text: ['Zika Virus (IN)'],
+    textposition: 'center',
+    mode: 'markers',
+    name: 'Cases per 1M (IN)',
+    //showlegend: false,
+    marker: caseMarkerIn
+  };
+  
+  Plotly.addTraces(div, [zikatrace, zikatrace_in]);
+
+  Plotly.relayout(div, {
     annotations: [
-//      {
-//        x: Math.log10(gbsCases),
-//        y: Math.log10(gbsCases),
-//        xref: 'x',
-//        yref: 'y',
-//        text: 'Guillain-Barré Syndrome',
-////        font: {
-////          color: caseColor,
-////        },
-//        bgcolor: 'rgba(255, 255, 255, 0.8)',
-//        bordercolor: caseColor,
-//        showarrow: true,
-//        arrowcolor: 'rgb(67, 67, 67)',
-//        arrowhead: 2,
-//        ax: 100,
-//        ay: 0
-//      },
       {
         x: Math.log10(incases),
         y: Math.log10(incases),
@@ -382,15 +379,8 @@ MyApp.drawLadder = function (div, destcases, incases) {
         ax: 100,
         ay: -10
       }
-    ],
-    width: 500,
-    height: 400,
-    paper_bgcolor: 'rgb(254, 247, 234)',
-    plot_bgcolor: 'rgb(254, 247, 234)',
-    //  hovermode: 'closest'
-  };
-
-  Plotly.newPlot(div, data, layout);
+    ] 
+  })
 };
 
 MyApp.setUpTangle = function (divId, risks, inrisks) {
@@ -465,7 +455,6 @@ MyApp.submitForm = function () {
 
     // Clear result div
     $('#result').text("");
-    $('#ladder').text("");
     $('#mosquitorisk').text("");
 
     var destination = $('input[name="destination"]').val();
@@ -558,7 +547,7 @@ MyApp.submitForm = function () {
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
             $('#chartbox').prepend('Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and ' + state +' compared to the annual risk of selected causes of death.')
-            MyApp.drawLadder('ladder', data.result.destrisk, data.result.inrisk);
+            MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             
             var resultText = data.result.text;
@@ -593,6 +582,9 @@ $(document).ready(function () {
   // Load map
   google.maps.event.addDomListener(window, 'load', MyApp.initMap);
 
+  // Load ladder
+  MyApp.drawLadder('ladder');
+  
   // Client-side validation of input
   $('input[name="destination"]').on('keyup textinput', MyApp.checkSubmit);
   $('input[name="date"]').prop('min', new Date().toISOString().substring(0, 10));
