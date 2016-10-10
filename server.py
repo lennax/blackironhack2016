@@ -202,9 +202,8 @@ def get_result(lat, lng, mydate, state, county=None):
    <ul>
    <li>{casesummary}</li>
    <li>{popsummary}</li>
-   <li>{climatesummary}</li>
+   <li>CLIMATESUMMARY</li>
    </ul>
-   Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and {state} compared to the annual risk of selected causes of death.
      """
     #"""
     #{destination} has {pop} people.
@@ -312,10 +311,11 @@ def get_result(lat, lng, mydate, state, county=None):
             # No mosquito risk
             return 0
 
-    risk_names = ["are not", "are"]
+    #risk_names = ["are not", "are"]
     in_mosquito_risk = parse_risk(**indiana_risks)
     if indiana_risks['mosquito_season'] is not None:
-        inrisk_arr = [risk_names[v] for v in indiana_risks['mosquito_season']]
+        #inrisk_arr = [risk_names[v] for v in indiana_risks['mosquito_season']]
+        inrisk_arr = [int(v) for v in indiana_risks['mosquito_season']]
         result_dict['inrisk_arr'] = inrisk_arr
     app.logger.debug(result_dict['inrisk_arr'])
     result_kwargs['inclimate'] = mosquito_risk_names[in_mosquito_risk]
@@ -323,7 +323,8 @@ def get_result(lat, lng, mydate, state, county=None):
 
     mosquito_risk = parse_risk(**risks)
     if risks['mosquito_season'] is not None:
-        risk_arr = [risk_names[v] for v in risks['mosquito_season']]
+        #risk_arr = [risk_names[v] for v in risks['mosquito_season']]
+        risk_arr = [int(v) for v in risks['mosquito_season']]
         result_dict['destrisk_arr'] = risk_arr
     app.logger.debug('destrisk_arr')
     result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
