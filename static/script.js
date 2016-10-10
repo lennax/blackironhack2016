@@ -427,6 +427,14 @@ MyApp.setUpTangle = function (divId, risks, inrisks) {
       if (inrisks != null) {
         this.inrisk = inrisks[this.month];
       }
+      
+      if (this.risk && this.inrisk) {
+        this.riskcmp = 0
+      } else if (!this.risk && !this.inrisk) {
+        this.riskcmp = 2;
+      } else {
+        this.riskcmp = 1;
+      }
     }
   });
 };
@@ -523,35 +531,45 @@ MyApp.submitForm = function () {
             return 1
           } else {
             //console.log(data.result);
-            $('input[name=destination]').focus().select();
+            //$('input[name=destination]').focus().select();
             //console.log(data.result.destrisk_arr);
             //console.log(data.result.inrisk_arr);
-            var riskHtml = 'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos '
-            var eitherRisk = 0;
-            if (data.result.inrisk_arr != null) {
-              riskHtml += '<span data-var="inrisk"></span> in season in Indiana'
-              eitherRisk += 1;
-            }            
-            if (data.result.destrisk_arr != null) {
-              if (eitherRisk) {
-                riskHtml += " and "
-              }
-              riskHtml += '<span data-var="risk"></span> in season in '
-              riskHtml += state 
-              eitherRisk += 1;
-            };
-            if (eitherRisk) {
-              riskHtml += "."
-              $('#mosquitorisk').html(riskHtml);
-              MyApp.setUpTangle("mosquitorisk", data.result.destrisk_arr, data.result.inrisk_arr);
-            }
+//            var riskHtml = 'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos '
+//            var eitherRisk = 0;
+//            if (data.result.inrisk_arr != null) {
+//              riskHtml += '<span data-var="inrisk"></span> in season in Indiana'
+//              eitherRisk += 1;
+//            }            
+//            if (data.result.destrisk_arr != null) {
+//              if (eitherRisk) {
+//                riskHtml += " and "
+//              }
+//              riskHtml += '<span data-var="risk"></span> in season in '
+//              riskHtml += state 
+//              eitherRisk += 1;
+//            };
+//            if (eitherRisk) {
+//              riskHtml += "."
+//              $('#mosquitorisk').html(riskHtml);
+//              MyApp.setUpTangle("mosquitorisk", data.result.destrisk_arr, data.result.inrisk_arr);
+//            }
            
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
+            $('#chartbox').prepend('Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and ' + state +' compared to the annual risk of selected causes of death.')
             MyApp.drawLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
-            $('#result').html(data.result.text);
+            
+            var resultText = data.result.text;
+            resultText = resultText.replace('CLIMATESUMMARY',
+//                                            'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>')
+            //console.log(resultText);
+  'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos are <span data-var="risk" class="TKIf" data-invert="data-invert">not</span> in season in <span data-var="riskcmp" class="TKSwitch"> <span>both</span> <span></span> <span>either</span></span>' +
+    state +
+    '<span data-var="riskcmp" class="TKSwitch"> <span>and</span> <span>but not in</span> <span>or</span> </span> Indiana. (Drag to change your month of travel)')
+            $('#result').html(resultText);
+            MyApp.setUpTangle("result", data.result.destrisk_arr, data.result.inrisk_arr);
           }
         });
     });
