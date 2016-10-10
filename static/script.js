@@ -140,7 +140,7 @@ MyApp.drawGauge = function (risk) {
   // setInterval(function () { // data.setValue(0, 1, 40 + Math.round(60 * Math.random())); // chart.draw(data, options); // }, 13000);  
 };
 
-MyApp.drawLadder = function (destcases, incases) {
+MyApp.drawLadder = function (div, destcases, incases) {
   "use strict";
 
   var cause = [
@@ -390,7 +390,7 @@ MyApp.drawLadder = function (destcases, incases) {
     //  hovermode: 'closest'
   };
 
-  Plotly.newPlot('ladder', data, layout);
+  Plotly.newPlot(div, data, layout);
 };
 
 MyApp.setUpTangle = function (divId, risks, inrisks) {
@@ -522,10 +522,10 @@ MyApp.submitForm = function () {
             $('#result').text("Error: " + data.result.error);
             return 1
           } else {
-            console.log(data.result);
+            //console.log(data.result);
             $('input[name=destination]').focus().select();
-            console.log(data.result.destrisk_arr);
-            console.log(data.result.inrisk_arr);
+            //console.log(data.result.destrisk_arr);
+            //console.log(data.result.inrisk_arr);
             var riskHtml = 'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos '
             var eitherRisk = 0;
             if (data.result.inrisk_arr != null) {
@@ -549,7 +549,7 @@ MyApp.submitForm = function () {
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
-            MyApp.drawLadder(data.result.destrisk, data.result.inrisk);
+            MyApp.drawLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             $('#result').html(data.result.text);
           }
@@ -559,7 +559,6 @@ MyApp.submitForm = function () {
 
   return false;
 };
-
 
 // Process form and call python
 $(document).ready(function () {
@@ -578,6 +577,7 @@ $(document).ready(function () {
 
   // Client-side validation of input
   $('input[name="destination"]').on('keyup textinput', MyApp.checkSubmit);
+  $('input[name="date"]').prop('min', new Date().toISOString().substring(0, 10));
   $('input[name="date"]').on('change', MyApp.checkSubmit);
 
   // Bind button click to submit
