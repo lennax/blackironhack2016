@@ -523,7 +523,7 @@ MyApp.submitForm = function () {
       alert('Geocode not successful: ' + status);
     }).then(function (response) {
       // TODO determine how to parse address_components
-      var country, state, county, component;
+      var country, state, stateAbbr, county, component;
       //            console.log(response.address_components);
       for (var x = 0; x < response.address_components.length; x++) {
         component = response.address_components[x];
@@ -541,6 +541,7 @@ MyApp.submitForm = function () {
           country = component.long_name;
         } else if (component.types[0] == "administrative_area_level_1") {
           state = component.long_name;
+          stateAbbr = component.short_name;
         } else if (component.types[0] == "administrative_area_level_2") {
           county = component.long_name;
         };
@@ -572,28 +573,7 @@ MyApp.submitForm = function () {
           } else {
             //console.log(data.result);
             //$('input[name=destination]').focus().select();
-            //console.log(data.result.destrisk_arr);
-            //console.log(data.result.inrisk_arr);
-//            var riskHtml = 'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos '
-//            var eitherRisk = 0;
-//            if (data.result.inrisk_arr != null) {
-//              riskHtml += '<span data-var="inrisk"></span> in season in Indiana'
-//              eitherRisk += 1;
-//            }            
-//            if (data.result.destrisk_arr != null) {
-//              if (eitherRisk) {
-//                riskHtml += " and "
-//              }
-//              riskHtml += '<span data-var="risk"></span> in season in '
-//              riskHtml += state 
-//              eitherRisk += 1;
-//            };
-//            if (eitherRisk) {
-//              riskHtml += "."
-//              $('#mosquitorisk').html(riskHtml);
-//              MyApp.setUpTangle("mosquitorisk", data.result.destrisk_arr, data.result.inrisk_arr);
-//            }
-           
+            
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
@@ -601,13 +581,28 @@ MyApp.submitForm = function () {
             MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             
+            // TODO update case and pop charts
+            var pop_y,
+                case_y = ['IN', stateAbbr];
+            MyApp.updateBar('casebox',
+                            case_y,
+                            [data.result.inrisk * 1000000,
+                             data.result.destrisk * 1000000]);
+            if (county != null) {
+              pop_y = ['Tippecanoe', county.replace('County', '')];
+            } else {
+              pop_y = case_y;
+            }
+            MyApp.updateBar('popbox',
+                            pop_y,
+                            [data.result.inpop,
+                             data.result.destpop]);
+            
             var resultText = data.result.text;
             resultText = resultText.replace('CLIMATESUMMARY',
-//                                            'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>')
-            //console.log(resultText);
   'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos are <span data-var="risk" class="TKIf" data-invert="data-invert">not</span> in season in <span data-var="riskcmp" class="TKSwitch"> <span>both</span> <span></span> <span>either</span></span>' +
-    state +
-    '<span data-var="riskcmp" class="TKSwitch"> <span>and</span> <span>but not in</span> <span>or</span> </span> Indiana. (Drag to change your month of travel)')
+  state +
+  '<span data-var="riskcmp" class="TKSwitch"> <span>and</span> <span>but not in</span> <span>or</span> </span> Indiana. (Drag to change your month of travel)')
             $('#result').html(resultText);
             MyApp.setUpTangle("result", data.result.destrisk_arr, data.result.inrisk_arr);
           }
@@ -633,6 +628,10 @@ $(document).ready(function () {
   // Load map
   google.maps.event.addDomListener(window, 'load', MyApp.initMap);
 
+  // Init bar charts
+  MyApp.drawBar('casebox', ['IN', ''], 'Cases in state');
+  MyApp.drawBar('popbox', ['Tippecanoe', ''], 'Population');
+  
   // Load ladder
   MyApp.drawLadder('ladder');
   
