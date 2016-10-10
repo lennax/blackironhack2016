@@ -140,6 +140,57 @@ MyApp.drawGauge = function (risk) {
   // setInterval(function () { // data.setValue(0, 1, 40 + Math.round(60 * Math.random())); // chart.draw(data, options); // }, 13000);  
 };
 
+MyApp.commaFormat = Plotly.d3.format(',d');
+
+MyApp.drawBar = function(div, x_arr, ylabel) {
+  Plotly.newPlot(div, [{
+    type: 'bar',
+    x: x_arr,
+    y: new Array(x_arr.length).fill(0),
+    name: ylabel,
+    mode: 'legendonly',
+    showlegend: false,
+  }], {
+    xaxis: {
+      fixedrange: true,
+    },
+    yaxis: {
+      title: ylabel,
+      fixedrange: true,
+      rangemode: 'nonnegative',
+    },
+    barmode: 'stack',
+    showlegend: 'false',
+    width: 300,
+    height: 350,
+  });
+};
+
+MyApp.updateBar = function(div, x_arr, y_arr) {
+  Plotly.deleteTraces(div, 0)
+  Plotly.addTraces(div, {
+    type: 'bar',
+    x: x_arr,
+    y: y_arr,
+    name: 'Cases',
+    showlegend: false,
+  })
+  var annotations = [];
+  for (i = 0; i < x_arr.length; i++) {
+    annotations.push({
+      x: x_arr[i],
+      y: y_arr[i],
+      text: MyApp.commaFormat(y_arr[i]),
+      xanchor: 'center',
+      yanchor: 'bottom',
+      showarrow: false,
+    })
+  }
+  Plotly.relayout(div, {
+    annotations: annotations
+  })
+}
+
 MyApp.drawLadder = function (div) {
   "use strict";
 
