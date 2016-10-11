@@ -537,9 +537,10 @@ MyApp.submitForm = function () {
 
   if (MyApp.validData()) {
 
-    // Clear result div
-    $('#result').text("");
-    $('#mosquitorisk').text("");
+    // Clear result div            
+    $('#casesummary').text('');
+    $('#popsummary').text('');
+    $('#climatesummary').addClass('hidden');
 
     destination = $('input[name="destination"]').val();
     //console.log(destination)
@@ -597,12 +598,11 @@ MyApp.submitForm = function () {
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
-            $('#chartlead').text('Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and ' + state + ' compared to the annual risk of selected causes of death.');
             MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             
-            popColor = "#0080ff";
-            caseColor = "#cb400d";
+            popColor = 'rgb(119, 190, 222)';
+            caseColor = 'rgb(229, 170, 38)';
             
             // update case and pop charts
             case_y = ['IN', stateAbbr];
