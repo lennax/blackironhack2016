@@ -151,17 +151,18 @@ MyApp.drawBar = function(div, x_arr, ylabel) {
     mode: 'legendonly',
     showlegend: false,
   }], {
+    title: ylabel,
     xaxis: {
       fixedrange: true,
     },
     yaxis: {
-      title: ylabel,
+//      title: ylabel,
       fixedrange: true,
       rangemode: 'nonnegative',
     },
     barmode: 'stack',
     showlegend: 'false',
-    width: 300,
+    width: 275,
     height: 350,
   });
 };
@@ -586,8 +587,8 @@ MyApp.submitForm = function () {
                 case_y = ['IN', stateAbbr];
             MyApp.updateBar('casebox',
                             case_y,
-                            [data.result.inrisk * 1000000,
-                             data.result.destrisk * 1000000]);
+                            [data.result.incases,
+                             data.result.destcases]);
             if (county != null) {
               pop_y = ['Tippecanoe', county.replace('County', '')];
             } else {
@@ -602,9 +603,10 @@ MyApp.submitForm = function () {
             resultText = resultText.replace('CLIMATESUMMARY',
   'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos are <span data-var="risk" class="TKIf" data-invert="data-invert">not</span> in season in <span data-var="riskcmp" class="TKSwitch"> <span>both</span> <span></span> <span>either</span></span>' +
   state +
-  '<span data-var="riskcmp" class="TKSwitch"> <span>and</span> <span>but not in</span> <span>or</span> </span> Indiana. (Drag to change your month of travel)')
+  '<span data-var="riskcmp" class="TKSwitch"> <span>and</span> <span>but not in</span> <span>or</span> </span> Indiana. (Drag to change your month of travel and see how it changes your risk)')
             $('#result').html(resultText);
-            MyApp.setUpTangle("result", data.result.destrisk_arr, data.result.inrisk_arr);
+            MyApp.setUpTangle("result", data.result.destclimate_arr, data.result.inclimate_arr);
+            $('.TKAdjustableNumber').append('<span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span>')
           }
         });
     });

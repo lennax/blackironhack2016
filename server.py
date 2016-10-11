@@ -93,8 +93,12 @@ def get_result(lat, lng, mydate, state, county=None):
     result_dict = dict(text=None,
                        destrisk=None,
                        inrisk=None,
-                       destrisk_arr=None,
-                       inrisk_arr=None,
+                       destclimate_arr=None,
+                       inclimate_arr=None,
+                       destcases=None,
+                       incases=None,
+                       destpop=None,
+                       inpop=None,
                        error=0)
   
     latlng = (lat, lng)
@@ -319,10 +323,10 @@ def get_result(lat, lng, mydate, state, county=None):
     #risk_names = ["are not", "are"]
     in_mosquito_risk = parse_risk(**indiana_risks)
     if indiana_risks['mosquito_season'] is not None:
-        #inrisk_arr = [risk_names[v] for v in indiana_risks['mosquito_season']]
-        inrisk_arr = [int(v) for v in indiana_risks['mosquito_season']]
-        result_dict['inrisk_arr'] = inrisk_arr
-    app.logger.debug(result_dict['inrisk_arr'])
+        #inclimate_arr = [risk_names[v] for v in indiana_risks['mosquito_season']]
+        inclimate_arr = [int(v) for v in indiana_risks['mosquito_season']]
+        result_dict['inclimate_arr'] = inclimate_arr
+    app.logger.debug(result_dict['inclimate_arr'])
     result_kwargs['inclimate'] = mosquito_risk_names[in_mosquito_risk]
     result_kwargs['inclimateclass'] = mosquito_risk_classes[in_mosquito_risk]
 
@@ -330,8 +334,8 @@ def get_result(lat, lng, mydate, state, county=None):
     if risks['mosquito_season'] is not None:
         #risk_arr = [risk_names[v] for v in risks['mosquito_season']]
         risk_arr = [int(v) for v in risks['mosquito_season']]
-        result_dict['destrisk_arr'] = risk_arr
-    app.logger.debug('destrisk_arr')
+        result_dict['destclimate_arr'] = risk_arr
+    app.logger.debug('destclimate_arr')
     result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
     result_kwargs['climateclass'] = mosquito_risk_classes[mosquito_risk]
 
@@ -374,6 +378,9 @@ def get_result(lat, lng, mydate, state, county=None):
 
     #if pop_sentence is not None:
         #result_text = result_text + " " + pop_sentence
+
+    result_dict['destcases'] = cases
+    result_dict['incases'] = incases
 
     result_dict['text'] = result_text.format(**result_kwargs)
     result_dict['destrisk'] = rate_per_mil(**risks)
