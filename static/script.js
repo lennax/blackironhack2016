@@ -33,15 +33,17 @@ MyApp.validData = function () {
 
 MyApp.initMap = function () {
   "use strict";
+  
+  var location, mapCanvas, mapOptions, map, input, autocomplete, infowindow, marker, address;
 
   // Geographic center of continental US
   //var location = new google.maps.LatLng(39.8282, -98.5795);
 
   // Purdue
-  var location = new google.maps.LatLng(40.4237, -86.9212);
+  location = new google.maps.LatLng(40.4237, -86.9212);
 
-  var mapCanvas = document.getElementById('map');
-  var mapOptions = {
+  mapCanvas = document.getElementById('map');
+  mapOptions = {
     center: location,
     zoom: 12,
     //            panControl: false,
@@ -49,17 +51,17 @@ MyApp.initMap = function () {
   };
   MyApp.map = new google.maps.Map(mapCanvas, mapOptions);
 
-  var map = MyApp.map;
+  map = MyApp.map;
 
-  var input = document.getElementById('destination');
+  input = document.getElementById('destination');
 
   //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-
-  var autocomplete = new google.maps.places.Autocomplete(input);
+  
+  autocomplete = new google.maps.places.Autocomplete(input);
   autocomplete.bindTo('bounds', map);
 
-  var infowindow = new google.maps.InfoWindow();
-  var marker = new google.maps.Marker({
+  infowindow = new google.maps.InfoWindow();
+  marker = new google.maps.Marker({
     map: map,
     anchorPoint: new google.maps.Point(0, -29)
   });
@@ -90,12 +92,12 @@ MyApp.initMap = function () {
     marker.setPosition(place.geometry.location);
     marker.setVisible(true);
 
-    var address = '';
+    address = '';
     if (place.address_components) {
       address = [
-        (place.address_components[0] && place.address_components[0].short_name || ''),
-        (place.address_components[1] && place.address_components[1].short_name || ''),
-        (place.address_components[2] && place.address_components[2].short_name || '')
+        ((place.address_components[0] && place.address_components[0].short_name) || ''),
+        ((place.address_components[1] && place.address_components[1].short_name) || ''),
+        ((place.address_components[2] && place.address_components[2].short_name) || '')
       ].join(' ');
     }
 
@@ -111,18 +113,20 @@ MyApp.initMap = function () {
 
 MyApp.drawGauge = function (risk) {
   "use strict";
+  
+  var data, options, chart;
 
   // Load Google chart package
   google.charts.load('current', {
     'packages': ['gauge']
   });
 
-  var data = google.visualization.arrayToDataTable([
+  data = google.visualization.arrayToDataTable([
     ['Label', 'Value'],
     ['Risk', risk]
   ]);
 
-  var options = {
+  options = {
     width: 120,
     height: 120,
     redFrom: 90,
@@ -133,7 +137,7 @@ MyApp.drawGauge = function (risk) {
     minorTicks: 3
   };
 
-  var chart = new google.visualization.Gauge(document.getElementById('gauge'));
+  chart = new google.visualization.Gauge(document.getElementById('gauge'));
 
   chart.draw(data, options);
 
@@ -177,7 +181,7 @@ MyApp.drawBar = function (div, x_arr, ylabel) {
   });
 };
 
-MyApp.updateBar = function(div, x_arr, y_arr) {
+MyApp.updateBar = function (div, x_arr, y_arr) {
   "use strict";
   var annotations,
     i;
@@ -190,7 +194,7 @@ MyApp.updateBar = function(div, x_arr, y_arr) {
     showlegend: false
   });
   annotations = [];
-  for (i = 0; i < x_arr.length; i++) {
+  for (i = 0; i < x_arr.length; i += 1) {
     annotations.push({
       x: x_arr[i],
       y: y_arr[i],
@@ -207,8 +211,10 @@ MyApp.updateBar = function(div, x_arr, y_arr) {
 
 MyApp.drawLadder = function (div) {
   "use strict";
+  
+  var cause, rate, breakpoint, deathColor, deathMarker, dummytrace, smalltrace, largetrace, data, xticktext, xtickvals, layout;
 
-  var cause = [
+  cause = [
     'Heart disease',
     'Lung cancer',
     'Car crash',
@@ -219,7 +225,7 @@ MyApp.drawLadder = function (div) {
     'Lightning'
   ];
 
-  var rate = [
+  rate = [
     1440.6,
     524.8,
     140.3,
@@ -230,10 +236,10 @@ MyApp.drawLadder = function (div) {
     0.10
   ];
 
-  var breakpoint = 4;
+  breakpoint = 4;
 
-  var deathColor = 'rgba(119, 190, 222, 0.95)';
-  var deathMarker = {
+  deathColor = 'rgba(119, 190, 222, 0.95)';
+  deathMarker = {
     color: deathColor,
     line: {
       color: deathColor,
@@ -243,7 +249,7 @@ MyApp.drawLadder = function (div) {
     size: 16
   };
 
-  var dummytrace = {
+  dummytrace = {
     type: 'scatter',
     x: [0],
     y: [0],
@@ -252,7 +258,7 @@ MyApp.drawLadder = function (div) {
     marker: deathMarker
   };
 
-  var smalltrace = {
+  smalltrace = {
     type: 'scatter',
     x: rate.slice(breakpoint, rate.length),
     y: rate.slice(breakpoint, rate.length),
@@ -264,7 +270,7 @@ MyApp.drawLadder = function (div) {
     marker: deathMarker
   };
 
-  var largetrace = {
+  largetrace = {
     type: 'scatter',
     x: rate.slice(0, breakpoint),
     y: rate.slice(0, breakpoint),
@@ -290,14 +296,14 @@ MyApp.drawLadder = function (div) {
   //    marker: caseMarker
   //  };
 
-  var data = [smalltrace, largetrace,
+  data = [smalltrace, largetrace,
 //              gbstrace,
               dummytrace];
 
-  var xtickvals = [0.1, 1, 10, 100, 1000];
-  var xticktext = ["1 in 10 million", "1 in 1 million", "1 in 100,000", "1 in 10,000", "1 in 1,000"];
+  xtickvals = [0.1, 1, 10, 100, 1000];
+  xticktext = ["1 in 10 million", "1 in 1 million", "1 in 100,000", "1 in 10,000", "1 in 1,000"];
 
-  var layout = {
+  layout = {
     title: 'Comparison of risks',
     xaxis: {
       showgrid: true,
@@ -357,8 +363,10 @@ MyApp.drawLadder = function (div) {
 MyApp.updateLadder = function (div, destcases, incases) {
   "use strict";
   
-  var caseColor = 'rgba(211, 115, 38, 0.95)';
-  var caseMarker = {
+  var caseColor, caseMarker, caseColorIn, caseMarkerIn, zikatrace, zikatrace_in;
+  
+  caseColor = 'rgba(211, 115, 38, 0.95)';
+  caseMarker = {
     color: caseColor,
     line: {
       color: caseColor,
@@ -368,8 +376,8 @@ MyApp.updateLadder = function (div, destcases, incases) {
     size: 16
   };
 
-  var caseColorIn = 'rgba(229, 170, 38, 0.95)';
-  var caseMarkerIn = {
+  caseColorIn = 'rgba(229, 170, 38, 0.95)';
+  caseMarkerIn = {
     color: caseColorIn,
     line: {
       color: caseColorIn,
@@ -379,7 +387,7 @@ MyApp.updateLadder = function (div, destcases, incases) {
     size: 16
   };
   
-  var zikatrace = {
+  zikatrace = {
     type: 'scatter',
     x: [destcases],
     y: [destcases],
@@ -391,7 +399,7 @@ MyApp.updateLadder = function (div, destcases, incases) {
     marker: caseMarker
   };
 
-  var zikatrace_in = {
+  zikatrace_in = {
     type: 'scatter',
     x: [incases],
     y: [incases],
@@ -451,29 +459,31 @@ MyApp.updateLadder = function (div, destcases, incases) {
 
 MyApp.setUpTangle = function (divId, risks, inrisks) {
   "use strict";
+  
+  var element, months, tangle;
 
-  var element = document.getElementById(divId);
+  element = document.getElementById(divId);
 
-  var months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December"
-    ];
+  months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
 
   Tangle.formats.month = function (value) { // formats 0.42 as "42%"
     return months[value];
   };
 
-  var tangle = new Tangle(element, {
+  tangle = new Tangle(element, {
     initialize: function () {
       this.month = new Date().getMonth();
     },
@@ -519,6 +529,8 @@ MyApp.geocode = function (address) {
 
 MyApp.submitForm = function () {
   "use strict";
+  
+  var destination;
 
   if (MyApp.validData()) {
 
@@ -526,7 +538,7 @@ MyApp.submitForm = function () {
     $('#result').text("");
     $('#mosquitorisk').text("");
 
-    var destination = $('input[name="destination"]').val();
+    destination = $('input[name="destination"]').val();
     //console.log(destination)
 
     MyApp.geocode(destination).then(function (response) {
@@ -541,39 +553,40 @@ MyApp.submitForm = function () {
       alert('Geocode not successful: ' + status);
     }).then(function (response) {
       // TODO determine how to parse address_components
-      var country, state, stateAbbr, county, component;
+      var x, country, state, stateAbbr, county, component;
       //            console.log(response.address_components);
-      for (var x = 0; x < response.address_components.length; x++) {
+      for (x = 0; x < response.address_components.length; x += 1) {
         component = response.address_components[x];
         console.log(component);
-        if (component.types[0] == "country") {
+        if (component.types[0] === "country") {
           country = component.long_name;
-        } else if (component.types[0] == "administrative_area_level_1") {
+        } else if (component.types[0] === "administrative_area_level_1") {
           state = component.long_name;
           stateAbbr = component.short_name;
-        } else if (component.types[0] == "administrative_area_level_2") {
+        } else if (component.types[0] === "administrative_area_level_2") {
           county = component.long_name;
-        };
+        }
 
       }
-      if (country != "United States") {
+      if (country !== "United States") {
         $('#result').text("Error: data not available outside the US");
-        return 1
-      };
+        return 1;
+      }
       console.log(country);
       console.log(state);
       console.log(county);
       $.getJSON($SCRIPT_ROOT + '/calculate', {
-          lat: response.geometry.location.lat(),
-          lng: response.geometry.location.lng(),
-          date: $('input[name="date"]').val(),
-          state: state,
-          county: county,
-        },
+        lat: response.geometry.location.lat(),
+        lng: response.geometry.location.lng(),
+        date: $('input[name="date"]').val(),
+        state: state,
+        county: county
+      },
         function (data) {
+          var pop_y, case_y, resultText;
           if (data.result.error) {
             $('#result').text("Error: " + data.result.error);
-            return 1
+            return 1;
           } else {
             //console.log(data.result);
             //$('input[name=destination]').focus().select();
@@ -581,18 +594,17 @@ MyApp.submitForm = function () {
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
-            $('#chartbox').prepend('Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and ' + state +' compared to the annual risk of selected causes of death.')
+            $('#chartbox').prepend('Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and ' + state + ' compared to the annual risk of selected causes of death.');
             MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             
             // update case and pop charts
-            var pop_y,
-                case_y = ['IN', stateAbbr];
+            case_y = ['IN', stateAbbr];
             MyApp.updateBar('casebox',
                             case_y,
                             [data.result.incases,
                              data.result.destcases]);
-            if (county != null) {
+            if (county !== null) {
               pop_y = ['Tippecanoe', county.replace('County', '')];
             } else {
               pop_y = case_y;
@@ -602,18 +614,18 @@ MyApp.submitForm = function () {
                             [data.result.inpop,
                              data.result.destpop]);
             
-            var resultText = data.result.text;
+            resultText = data.result.text;
             resultText = resultText.replace('CLIMATESUMMARY',
-  'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos are <span data-var="risk" class="TKIf" data-invert="data-invert">not</span> in season in <span data-var="riskcmp" class="TKSwitch"> <span>both </span><span></span><span></span><span>either </span></span>' +
-  state +
-  '<span data-var="riskcmp" class="TKSwitch"> <span>and</span><span>but are in</span><span>but not in</span><span>or</span> </span> Indiana. (Drag to change your month of travel and see how it changes your risk)')
+              'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos are <span data-var="risk" class="TKIf" data-invert="data-invert">not</span> in season in <span data-var="riskcmp" class="TKSwitch"> <span>both </span><span></span><span></span><span>either </span></span>' +
+              state +
+              '<span data-var="riskcmp" class="TKSwitch"> <span>and</span><span>but are in</span><span>but not in</span><span>or</span> </span> Indiana. (Drag to change your month of travel and see how it changes your risk)');
             $('#result').html(resultText);
             MyApp.setUpTangle("result", data.result.destclimate_arr, data.result.inclimate_arr);
-            $('.TKAdjustableNumber').append('<span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span>')
+            $('.TKAdjustableNumber').append('<span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span>');
           }
         });
     });
-  };
+  }
 
   return false;
 };
@@ -624,7 +636,6 @@ $(document).ready(function () {
 
   // Add functionality to nav tabs
   $('#myNavTabs a').click(function (e) {
-    "use strict";
     //console.log("click");
     e.preventDefault();
     $(this).tab('show');
@@ -662,7 +673,7 @@ $(document).ready(function () {
 
   // Bind enter to submit
   $('input[type=text]').bind('keydown', function (e) {
-    if (e.keyCode == 13) {
+    if (e.keyCode === 13) {
       MyApp.submitForm(e);
     }
   });
