@@ -23,8 +23,8 @@ MyApp.checkSubmit = function (e) {
 
 MyApp.validData = function () {
   "use strict";
-  var destinationLen = $('input[name="destination"]').val().length;
-  var dateVal = $('input[name="date"]').val();
+  var destinationLen = $('input[name="destination"]').val().length,
+    dateVal = $('input[name="date"]').val();
   //        console.log(destinationLen, destinationLen > 0);
   //        console.log(dateVal);
   //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
@@ -142,23 +142,24 @@ MyApp.drawGauge = function (risk) {
 
 MyApp.commaFormat = Plotly.d3.format(',d');
 
-MyApp.drawBar = function(div, x_arr, ylabel) {
+MyApp.drawBar = function (div, x_arr, ylabel) {
+  "use strict";
   Plotly.newPlot(div, [{
     type: 'bar',
     x: x_arr,
     y: new Array(x_arr.length).fill(0),
     name: ylabel,
     mode: 'legendonly',
-    showlegend: false,
+    showlegend: false
   }], {
     title: ylabel,
     xaxis: {
-      fixedrange: true,
+      fixedrange: true
     },
     yaxis: {
 //      title: ylabel,
       fixedrange: true,
-      rangemode: 'nonnegative',
+      rangemode: 'nonnegative'
     },
     barmode: 'stack',
     showlegend: 'false',
@@ -172,20 +173,23 @@ MyApp.drawBar = function(div, x_arr, ylabel) {
       pad: 4
     },
     paper_bgcolor: 'rgb(254, 247, 234)',
-    plot_bgcolor: 'rgb(254, 247, 234)',
+    plot_bgcolor: 'rgb(254, 247, 234)'
   });
 };
 
 MyApp.updateBar = function(div, x_arr, y_arr) {
-  Plotly.deleteTraces(div, 0)
+  "use strict";
+  var annotations,
+    i;
+  Plotly.deleteTraces(div, 0);
   Plotly.addTraces(div, {
     type: 'bar',
     x: x_arr,
     y: y_arr,
     name: 'Cases',
-    showlegend: false,
-  })
-  var annotations = [];
+    showlegend: false
+  });
+  annotations = [];
   for (i = 0; i < x_arr.length; i++) {
     annotations.push({
       x: x_arr[i],
@@ -193,38 +197,38 @@ MyApp.updateBar = function(div, x_arr, y_arr) {
       text: MyApp.commaFormat(y_arr[i]),
       xanchor: 'center',
       yanchor: 'bottom',
-      showarrow: false,
-    })
+      showarrow: false
+    });
   }
   Plotly.relayout(div, {
     annotations: annotations
-  })
-}
+  });
+};
 
 MyApp.drawLadder = function (div) {
   "use strict";
 
   var cause = [
-'Heart disease',
-'Lung cancer',
-'Car crash',
-'Firearm homicide',
-'Plane crash',
-'Drowning in bathtub',
-'Arthropod-borne virus',
-'Lightning'
+    'Heart disease',
+    'Lung cancer',
+    'Car crash',
+    'Firearm homicide',
+    'Plane crash',
+    'Drowning in bathtub',
+    'Arthropod-borne virus',
+    'Lightning'
   ];
 
   var rate = [
-1440.6,
-524.8,
-140.3,
-38.8,
-2,
-1.3,
-0.3,
-0.10
-];
+    1440.6,
+    524.8,
+    140.3,
+    38.8,
+    2,
+    1.3,
+    0.3,
+    0.10
+  ];
 
   var breakpoint = 4;
 
@@ -233,7 +237,7 @@ MyApp.drawLadder = function (div) {
     color: deathColor,
     line: {
       color: deathColor,
-      width: 1,
+      width: 1
     },
     symbol: 'circle',
     size: 16
@@ -245,7 +249,7 @@ MyApp.drawLadder = function (div) {
     y: [0],
     mode: 'markers',
     name: 'Deaths per 1M in USA',
-    marker: deathMarker,
+    marker: deathMarker
   };
 
   var smalltrace = {
@@ -327,7 +331,7 @@ MyApp.drawLadder = function (div) {
       showticklabels: false,
       ticks: '',
       type: 'log',
-      rangemode: 'nonnegative',
+      rangemode: 'nonnegative'
     },
     //  margin: {
     //    l: 140,
@@ -337,27 +341,28 @@ MyApp.drawLadder = function (div) {
     //  },
     showlegend: false,
     legend: {
-      orientation: 'h',
+      orientation: 'h'
     },
 
     width: 500,
     height: 400,
     paper_bgcolor: 'rgb(254, 247, 234)',
-    plot_bgcolor: 'rgb(254, 247, 234)',
+    plot_bgcolor: 'rgb(254, 247, 234)'
     //  hovermode: 'closest'
   };
 
   Plotly.newPlot(div, data, layout);
 };
 
-MyApp.updateLadder = function(div, destcases, incases) {
+MyApp.updateLadder = function (div, destcases, incases) {
+  "use strict";
   
   var caseColor = 'rgba(211, 115, 38, 0.95)';
   var caseMarker = {
     color: caseColor,
     line: {
       color: caseColor,
-      width: 1,
+      width: 1
     },
     symbol: 'square',
     size: 16
@@ -368,7 +373,7 @@ MyApp.updateLadder = function(div, destcases, incases) {
     color: caseColorIn,
     line: {
       color: caseColorIn,
-      width: 1,
+      width: 1
     },
     symbol: 'diamond',
     size: 16
@@ -440,28 +445,29 @@ MyApp.updateLadder = function(div, destcases, incases) {
         ax: 100,
         ay: -10
       }
-    ] 
-  })
+    ]
+  });
 };
 
 MyApp.setUpTangle = function (divId, risks, inrisks) {
+  "use strict";
 
   var element = document.getElementById(divId);
 
   var months = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
-  ];
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ];
 
   Tangle.formats.month = function (value) { // formats 0.42 as "42%"
     return months[value];
@@ -472,15 +478,15 @@ MyApp.setUpTangle = function (divId, risks, inrisks) {
       this.month = new Date().getMonth();
     },
     update: function () {
-      if (risks != null) {
+      if (risks !== null) {
         this.risk = risks[this.month];
       }
-      if (inrisks != null) {
+      if (inrisks !== null) {
         this.inrisk = inrisks[this.month];
       }
       
       if (this.risk && this.inrisk) {
-        this.riskcmp = 0
+        this.riskcmp = 0;
       } else if (!this.risk && !this.inrisk) {
         this.riskcmp = 3;
       } else if (!this.risk && this.inrisk) {
@@ -502,10 +508,10 @@ MyApp.geocode = function (address) {
     MyApp.geocoder.geocode({
       'address': address
     }, function (results, status) {
-      if (status == 'OK') {
+      if (status === 'OK') {
         resolve(results[0]);
       } else {
-        reject(Error(status));
+        reject(new Error(status));
       }
     });
   });
@@ -540,15 +546,6 @@ MyApp.submitForm = function () {
       for (var x = 0; x < response.address_components.length; x++) {
         component = response.address_components[x];
         console.log(component);
-        //                console.log(component.types[0]);
-        //        switch(component.types[0]) {
-        //          case "country":
-        //            country = component.long_name;
-        //          case "administrative_area_level_1":
-        //            state = component.long_name;
-        //          case "administrative_area_level_2":
-        //            county = component.long_name;   
-        //        };
         if (component.types[0] == "country") {
           country = component.long_name;
         } else if (component.types[0] == "administrative_area_level_1") {
@@ -557,10 +554,6 @@ MyApp.submitForm = function () {
         } else if (component.types[0] == "administrative_area_level_2") {
           county = component.long_name;
         };
-        //        if (component.types[0] == "administrative_area_level_1") {
-        //          state = component.long_name
-        //          console.log(component.long_name)
-        //        }
 
       }
       if (country != "United States") {
@@ -570,7 +563,6 @@ MyApp.submitForm = function () {
       console.log(country);
       console.log(state);
       console.log(county);
-      //console.log(response.address_components[2].long_name);
       $.getJSON($SCRIPT_ROOT + '/calculate', {
           lat: response.geometry.location.lat(),
           lng: response.geometry.location.lng(),
@@ -593,7 +585,7 @@ MyApp.submitForm = function () {
             MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             
-            // TODO update case and pop charts
+            // update case and pop charts
             var pop_y,
                 case_y = ['IN', stateAbbr];
             MyApp.updateBar('casebox',

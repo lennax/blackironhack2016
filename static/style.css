@@ -2,6 +2,14 @@ body {
   padding-top: 50px;
 }
 
+form, #barrow {
+  padding-bottom: 0.5em;
+}
+
+#chartbox, #ladder {
+  padding-top: 0.5em;
+}
+
 #map {
   width: 100%;
   height: 400px;
