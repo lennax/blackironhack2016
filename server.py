@@ -205,11 +205,11 @@ def get_result(lat, lng, mydate, state, county=None):
    </table>
     """
     result_text = """
-   <ul>
+   <ol>
    <li>{casesummary}</li>
    <li>{popsummary}</li>
    <li>CLIMATESUMMARY</li>
-   </ul>
+   </ol>
      """
     #"""
     #{destination} has {pop} people.
