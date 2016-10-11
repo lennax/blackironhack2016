@@ -71,7 +71,7 @@ MyApp.initMap = function () {
     marker.setVisible(false);
     var place = autocomplete.getPlace();
     if (!place.geometry) {
-      window.alert("Autocomplete's returned place contains no geometry");
+//      window.alert("Autocomplete's returned place contains no geometry");
       return;
     }
 
