@@ -164,6 +164,15 @@ MyApp.drawBar = function(div, x_arr, ylabel) {
     showlegend: 'false',
     width: 275,
     height: 350,
+    margin: {
+      l: 50,
+      r: 50,
+      b: 50,
+      t: 50,
+      pad: 4
+    },
+    paper_bgcolor: 'rgb(254, 247, 234)',
+    plot_bgcolor: 'rgb(254, 247, 234)',
   });
 };
 
