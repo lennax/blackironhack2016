@@ -586,7 +586,7 @@ MyApp.submitForm = function () {
         county: county
       },
         function (data) {
-          var pop_y, case_y, popColor, caseColor, resultText;
+          var pop_y, case_y, popColor, caseColor;
           if (data.result.error) {
             $('#result').text("Error: " + data.result.error);
             return 1;
@@ -622,13 +622,23 @@ MyApp.submitForm = function () {
                              data.result.destpop],
                             popColor);
             
-            resultText = data.result.text;
-            resultText = resultText.replace('CLIMATESUMMARY',
-              'In <span data-var="month" class="TKAdjustableNumber" data-min="0" data-max="11" data-format="month"></span>, mosquitos are <span data-var="risk" class="TKIf" data-invert="data-invert">not</span> in season in <span data-var="riskcmp" class="TKSwitch"> <span>both </span><span></span><span></span><span>either </span></span>' +
-              state +
-              '<span data-var="riskcmp" class="TKSwitch"> <span>and</span><span>but are in</span><span>but not in</span><span>or</span> </span> Indiana. (Drag to change your month of travel and see how it changes your risk)');
-            $('#result').html(resultText);
-            MyApp.setUpTangle("result", data.result.destclimate_arr, data.result.inclimate_arr);
+            $('.casesrc').hover(function() {
+              $('#casebox').removeClass('inactive');
+            }, function() {
+              $('#casebox').addClass('inactive');
+            });
+            $('.popsrc').hover(function() {
+              $('#popbox').removeClass('inactive');
+            }, function() {
+              $('#popbox').addClass('inactive');
+            });
+
+            $('.deststate').text(state);
+            $('#casesummary').text(data.result.casesummary);
+            $('#popsummary').text(data.result.popsummary);
+
+            $('#climatesummary').removeClass('hidden');
+            MyApp.setUpTangle("climatesummary", data.result.destclimate_arr, data.result.inclimate_arr);
             $('.TKAdjustableNumber').append('<span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span>');
           }
         });
