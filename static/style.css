@@ -103,18 +103,23 @@ body.loading .spinner {
 
 .casesrc {
   font-weight: bold;
-  color: #cb400d;
+  color: rgb(229, 170, 38);
   border-bottom: 2px solid;
 }
 
 .popsrc {
   font-weight: bold;
-  color: #0080ff;
+  color: rgb(119, 190, 222);
   border-bottom: 2px solid;
 }
 
 .risksummary {
-  font-style: italic;
+  font-weight: normal;
+/*  font-style: italic;*/
+}
+
+#risklist li {
+  font-weight: bold;
 }
 
 .TKAdjustableNumberHelp {
