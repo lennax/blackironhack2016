@@ -64,3 +64,27 @@ body {
 body.loading .spinner {
     display: block;
 }
+
+.TKAdjustableNumberHelp {
+  color: #ff7d1e;
+  padding: 1px;
+  background: rgba(255, 255, 255, 0.8);
+}
+.TKAdjustableNumber {
+  padding: 2px;
+  color: #fc5f0c;
+  background-color: #e6e6e6;
+  border: 1px solid #acacac;
+/*      border-bottom: none;*/
+  margin-right: 2px;
+}
+.TKAdjustableNumber:hover {
+/*      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);*/
+}
+.TKAdjustableNumber .glyphicon {
+  color: #656565;
+  padding-left: 0.24em;
+}
+.TKAdjustableNumber:hover .glyphicon {
+  color: #1f1f1f;
+}
