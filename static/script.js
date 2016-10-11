@@ -190,8 +190,8 @@ MyApp.updateBar = function (div, x_arr, y_arr) {
     type: 'bar',
     x: x_arr,
     y: y_arr,
-    name: 'Cases',
-    showlegend: false
+    showlegend: false,
+    hoverinfo: 'none'
   });
   annotations = [];
   for (i = 0; i < x_arr.length; i += 1) {
@@ -633,6 +633,8 @@ MyApp.submitForm = function () {
 // Process form and call python
 $(document).ready(function () {
   "use strict";
+  
+  var today = new Date()
 
   // Add functionality to nav tabs
   $('#myNavTabs a').click(function (e) {
@@ -640,6 +642,9 @@ $(document).ready(function () {
     e.preventDefault();
     $(this).tab('show');
   });
+  
+  // Add date
+  $('.today').text(today.toLocaleDateString());
 
   // Load map
   google.maps.event.addDomListener(window, 'load', MyApp.initMap);
@@ -653,7 +658,7 @@ $(document).ready(function () {
   
   // Client-side validation of input
   $('input[name="destination"]').on('keyup textinput', MyApp.checkSubmit);
-  $('input[name="date"]').prop('min', new Date().toISOString().substring(0, 10));
+  $('input[name="date"]').prop('min', today.toISOString().substring(0, 10));
   $('input[name="date"]').on('change', MyApp.checkSubmit);
 
   // Bind button click to submit
