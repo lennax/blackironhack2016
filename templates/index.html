@@ -80,17 +80,12 @@
                 <input type="submit" id="submit" value="Assess Risks" class="disabled" title="Please fill out the required values" disabled>
               </form>
             </div>
-
             <div class="row">
-
               <div id="map"></div>
-
             </div>
-            
           </div>
-            <div class="col-md-6">
-              
-              <div class="row">
+          <div class="col-md-6">
+            <div class="col-md-12">
               <p class="lead">Risk Factors</p>
               <div>
                 Three major factors that determine the risk for Zika virus are:
@@ -100,27 +95,25 @@
                   <li>Does the area have mosquitoes and if so, is it mosquito season?</li>
                 </ol>
               </div>
-              <div class="col-md-12 spinner"><img src="static/ajax-loader.gif" alt="loading" width=32 height=32/></div>
-              <div class="col-md-12">
-                <div class="row">
-                  <div class="col-md-6" id="casebox"></div>
-                  <div class="col-md-6" id="popbox"></div>
-                </div>
+              <div class="spinner"><img src="static/ajax-loader.gif" alt="loading" width=32 height=32/></div>
+              <div class="row">
+                <div class="col-md-6" id="casebox"></div>
+                <div class="col-md-6" id="popbox"></div>
               </div>
-              <div class="col-md-12" id="result"></div>
-<!--              <div class="col-md-12" id="mosquitorisk"></div>-->
-              </div>
-              <div class="row" id="chartbox">
+              <div id="result"></div>
+              <div id="chartbox">
                 <div id="ladder"></div>
               </div>
             </div>
-
-        </div>
-        <div class="row">
-          <div class="col-md-12">
-            <!--                        Bottom panel-->
           </div>
         </div>
+<!--
+        <div class="row">
+          <div class="col-md-12">
+            Bottom panel
+          </div>
+        </div>
+-->
       </div>
       <div role="tabpanel" class="tab-pane fade" id="about">
         <h1>About</h1>
