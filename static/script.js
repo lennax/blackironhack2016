@@ -594,7 +594,7 @@ MyApp.submitForm = function () {
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
-            $('#chartbox').prepend('Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and ' + state + ' compared to the annual risk of selected causes of death.');
+            $('#chartlead').text('Overall, the risk of getting Zika virus in the USA is low. For context, the following chart shows the rate of cases of Zika virus in Indiana and ' + state + ' compared to the annual risk of selected causes of death.');
             MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             
