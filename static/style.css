@@ -55,6 +55,10 @@ form, #barrow {
   opacity: 0.2;
 }
 
+.hidden {
+  display: none;
+}
+
 .tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;}
 
 .tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}
@@ -91,6 +95,26 @@ body.loading {
 
 body.loading .spinner {
     display: block;
+}
+
+.inactive {
+  opacity: 0.8;
+}
+
+.casesrc {
+  font-weight: bold;
+  color: #cb400d;
+  border-bottom: 2px solid;
+}
+
+.popsrc {
+  font-weight: bold;
+  color: #0080ff;
+  border-bottom: 2px solid;
+}
+
+.risksummary {
+  font-style: italic;
 }
 
 .TKAdjustableNumberHelp {

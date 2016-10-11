@@ -266,6 +266,7 @@ def get_result(lat, lng, mydate, state, county=None):
     result_kwargs['pop'] = "{0:,}".format(pop) if pop is not None else "-"
     result_kwargs['inpop'] = "{0:,}".format(inpop) if inpop is not None else "-"
     result_kwargs['popsummary'] = popsummary.format(**result_kwargs)
+    result_dict['popsummary'] = popsummary.format(**result_kwargs)
 
     incases = indiana_risks['cases']
     cases = risks['cases']
@@ -289,6 +290,7 @@ def get_result(lat, lng, mydate, state, county=None):
     result_kwargs['cases'] = "{0:,}".format(cases) if cases is not None else "-"
     result_kwargs['incases'] = "{0:,}".format(incases) if incases is not None else "-"
     result_kwargs['casesummary'] = casesummary.format(state=state)
+    result_dict['casesummary'] = casesummary.format(state=state)
 
     # Truth table
     #mosquito_risk   mosquito_season risk
@@ -338,46 +340,6 @@ def get_result(lat, lng, mydate, state, county=None):
     app.logger.debug('destclimate_arr')
     result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
     result_kwargs['climateclass'] = mosquito_risk_classes[mosquito_risk]
-
-    #climate_summary = list()
-    #if mosquito_risk_names[in_mosquito_risk] == "In season":
-        #climate_summary.append("{month_name} is mosquito season in West Lafayette, Indiana. You could reduce your risk by leaving Indiana for an area without mosquitoes.")
-    #if mosquito_risk_names[mosquito_risk] == "In season":
-        #climate_summary.append("{month_name} is mosquito season in {destination}. You could reduce your risk by traveling before or after mosquito season or to a different area without mosquitoes.")
-    #if not climate_summary:
-        #climate_sentence = "{month_name} is not mosquito season for either West Lafayette, Indiana or {state}, so the risk of getting infected by a mosquito is low."
-    #else:
-        #climate_sentence = " ".join(climate_summary)
-    #result_kwargs['climatesummary'] = climate_sentence.format(month_name=month_name, **result_kwargs)
-
-    #if errors['cases']:
-        #case_text = errors['cases']
-    #else:
-        #case_text = "{0} has {1} reported cases of Zika virus".format(state, risks['cases'])
-    #result_text.append(case_text)
-
-    #result_kwargs = dict(dest_state=state)
-    #destination = state
-    #pop = risks['pop']['state_pop']
-    #if county:
-        #destination = "{0}, {1}".format(county, state)
-        #pop = risks['pop']['county_pop']
-    #result_kwargs['destination'] = destination
-    #result_kwargs['pop'] = pop
-
-    # Needed results:
-        # Text summary
-        # destination cases per 1M
-        # Indiana cases per 1M
-
-    ## TODO handle missing data classes better
-    #if state is not None and cases is not None:
-        #result_text += " {0} total cases of Zika have been reported in {1}.".format(cases, state)
-        ## TODO logistic function
-        #risk = min(100, risk * 2)
-
-    #if pop_sentence is not None:
-        #result_text = result_text + " " + pop_sentence
 
     result_dict['destcases'] = cases
     result_dict['incases'] = incases
