@@ -488,10 +488,10 @@ MyApp.setUpTangle = function (divId, risks, inrisks) {
       this.month = new Date().getMonth();
     },
     update: function () {
-      if (risks !== null) {
+      if (risks !== null && risks !== 'undefined') {
         this.risk = risks[this.month];
       }
-      if (inrisks !== null) {
+      if (inrisks !== null && inrisks !== 'undefined') {
         this.inrisk = inrisks[this.month];
       }
       
@@ -604,7 +604,7 @@ MyApp.submitForm = function () {
                             case_y,
                             [data.result.incases,
                              data.result.destcases]);
-            if (county !== null) {
+            if (county !== null && county !== 'undefined') {
               pop_y = ['Tippecanoe', county.replace('County', '')];
             } else {
               pop_y = case_y;
