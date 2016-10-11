@@ -181,7 +181,7 @@ MyApp.drawBar = function (div, x_arr, ylabel) {
   });
 };
 
-MyApp.updateBar = function (div, x_arr, y_arr) {
+MyApp.updateBar = function (div, x_arr, y_arr, color) {
   "use strict";
   var annotations,
     i;
@@ -190,6 +190,9 @@ MyApp.updateBar = function (div, x_arr, y_arr) {
     type: 'bar',
     x: x_arr,
     y: y_arr,
+    marker: {
+      color: color
+    },
     showlegend: false,
     hoverinfo: 'none'
   });
@@ -583,7 +586,7 @@ MyApp.submitForm = function () {
         county: county
       },
         function (data) {
-          var pop_y, case_y, resultText;
+          var pop_y, case_y, popColor, caseColor, resultText;
           if (data.result.error) {
             $('#result').text("Error: " + data.result.error);
             return 1;
@@ -598,12 +601,16 @@ MyApp.submitForm = function () {
             MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
             
+            popColor = "#0080ff";
+            caseColor = "#cb400d";
+            
             // update case and pop charts
             case_y = ['IN', stateAbbr];
             MyApp.updateBar('casebox',
                             case_y,
                             [data.result.incases,
-                             data.result.destcases]);
+                             data.result.destcases],
+                            caseColor);
             if (county !== null && county !== 'undefined') {
               pop_y = ['Tippecanoe', county.replace('County', '')];
             } else {
@@ -612,7 +619,8 @@ MyApp.submitForm = function () {
             MyApp.updateBar('popbox',
                             pop_y,
                             [data.result.inpop,
-                             data.result.destpop]);
+                             data.result.destpop],
+                            popColor);
             
             resultText = data.result.text;
             resultText = resultText.replace('CLIMATESUMMARY',
