@@ -95,6 +95,9 @@
                   <li>Does the area have mosquitoes and if so, is it mosquito season?</li>
                 </ol>
               </div>
+              <div>
+              Mosquito-based transmission of a virus requires that a mosquito bites a newly-infected person (who still has the virus in their blood) and that the same mosquito lives long enough to bite another person.
+              </div>
               <div class="modal spinner"></div>
               <div class="row" id="barrow">
                 <div class="col-md-6" id="casebox"></div>
@@ -107,26 +110,41 @@
             </div>
           </div>
         </div>
-<!--
-        <div class="row">
-          <div class="col-md-12">
-            Bottom panel
-          </div>
-        </div>
--->
       </div>
       <div role="tabpanel" class="tab-pane fade" id="about">
         <h1>About</h1>
+        <p>
+        This website combines up-to-date numbers of Zika virus cases in the United States with data on the population and climate of an affected area in order to provide the context necessary to make an informed decision.
+        </p>
+        
+        <p>
+        The mosquito suitability model is based on the mosquito species that carry Zika virus (see <a href="http://www.cdc.gov/zika/vector/range.html">CDC website</a> for more information). Mosquitoes that carry other diseases such as West Nile virus are more cold-hardy and can appear further north.
+        </p>
+        
+        <h2>Resources</h2>
+        <ul>
+          <li>
+            <a href="https://www.cdc.gov/zika/">CDC Zika page</a>
+          </li>
+          <li>
+            <a href="http://www.who.int/csr/disease/zika/information-for-travelers/en/">WHO information for travelers visiting Zika affected areas</a>
+          </li>
+        </ul>
 
         <h2>Data sources</h2>
         <div class="references">
           <p>
-            Centers for Disease Control and Prevention, National Center for Health Statistics. Compressed Mortality File 1999-2014 on CDC WONDER Online Database, released December 2015. Data are from the Compressed Mortality File 1999-2014 Series 20 No. 2T, 2015, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative Program. Accessed at <a href="http://wonder.cdc.gov/cmf-icd10.html">http://wonder.cdc.gov/cmf-icd10.html</a> on Oct 1, 2016.</p>
+            Centers for Disease Control and Prevention. Zika Cases Reported in the United States. Accessed at <a href="http://www.cdc.gov/zika/intheus/maps-zika-us.html">http://www.cdc.gov/zika/intheus/maps-zika-us.html</a> on <span class="today">10/11/16</span>.</p>
+          <p>
+            Centers for Disease Control and Prevention, National Center for Health Statistics. Compressed Mortality File 1999-2014 on CDC WONDER Online Database, released December 2015. Data are from the Compressed Mortality File 1999-2014 Series 20 No. 2T, 2015, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative Program. Accessed at <a href="http://wonder.cdc.gov/cmf-icd10.html">http://wonder.cdc.gov/cmf-icd10.html</a> on 10/01/2016.</p>
+          <p>
+            National Oceanographic and Atmospheric Administration, National Centers for Environmental Information. Climate Normals Monthly. Accessed at <a href="http://www.ncdc.noaa.gov/cdo-web/webservices/v2">http://www.ncdc.noaa.gov/cdo-web/webservices/v2</a> on <span class="today">10/11/16</span>.</p>
+          <p>
+            United States Census Bureau. American Community Survey 1-Year Data (2015), released September 2016. Accessed at <a href="http://www.census.gov/data/developers/data-sets/acs-1yr.html">http://www.census.gov/data/developers/data-sets/acs-1yr.html</a> on <span class="today">10/11/16</span>.</p>
         </div>
         <h2>References</h2>
         <div class="references">
-
-          <p>Chen, S., Blanford, J. I., Fleischer, S. J., Hutchinson, M., Saunders, M. C., &amp; Thomas, M. B. (2013). Estimating West Nile Virus Transmission Period in Pennsylvania Using an Optimized Degree-Day Model. Vector Borne and Zoonotic Diseases, 13(7), 489–497. <a href="http://doi.org/10.1089/vbz.2012.1094">http://doi.org/10.1089/vbz.2012.1094</a></p>
+          <p>Chen, S., Blanford, J. I., Fleischer, S. J., Hutchinson, M., Saunders, M. C., &amp; Thomas, M. B. (2013). Estimating West Nile Virus transmission period in Pennsylvania using an optimized degree-day model. Vector Borne and Zoonotic Diseases, 13(7), 489–497. <a href="http://doi.org/10.1089/vbz.2012.1094">http://doi.org/10.1089/vbz.2012.1094</a></p>
           <p>Waldock, J., Chandra, N. L., Lelieveld, J., Proestos, Y., Michael, E., Christophides, G., &amp; Parham, P. E. (2013). The role of environmental variables on Aedes albopictus biology and chikungunya epidemiology. Pathogens and Global Health, 107(5), 224–241. <a href="http://doi.org/10.1179/2047773213Y.0000000100">http://doi.org/10.1179/2047773213Y.0000000100</a></p>
         </div>
 
@@ -137,6 +155,14 @@
       </div>
     </div>
   </div>
+  
+  <footer class="footer">
+    <div class="container">
+      <span class="text-muted">
+      Information provided on this page is not intended as a substitute for medical advice.
+      </span>
+    </div>
+  </footer>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
