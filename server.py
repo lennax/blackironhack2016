@@ -60,19 +60,20 @@ def calculate():
     #    destination = request.args.get('destination')
     lat = request.args.get('lat', type=float)
     lng = request.args.get('lng', type=float)
-    mydate = request.args.get('date')
+    month_no = request.args.get('date')
     state = request.args.get('state')
     county = request.args.get('county')
 
     errors = list()
 
     # parse date
-    datefmt = "%Y-%m-%d"
     try:
-        parsed_date = datetime.datetime.strptime(mydate, datefmt)
-    except ValueError:
-        # Server-side input validation
-        errors.append('invalid date format')
+        month_no = int(month_no)
+    except (ValueError, TypeError):
+        errors.append('invalid month format')
+    else:
+        if month_no < 0 or month_no > 11:
+            errors.append('invalid month')
 
     if not state:
         errors.append('state not specified')
@@ -83,12 +84,12 @@ def calculate():
 
     kwargs = dict(lat=lat,
                   lng=lng,
-                  mydate=parsed_date,
+                  month_no=month_no,
                   state=state,
                   county=county)
     return jsonify(result=get_result(**kwargs))
 
-def get_result(lat, lng, mydate, state, county=None):
+def get_result(lat, lng, month_no, state, county=None):
 
     result_dict = dict(
                        destrisk=None,
@@ -231,7 +232,6 @@ def get_result(lat, lng, mydate, state, county=None):
     #False   True    minimal
     #False   None    minimal
 
-    month_number = mydate.month
     #mosquito_risk_names = ["Minimal", "Unknown", "Out of season", "In season"]
     #mosquito_risk_classes = ["better", "unknown", "better", "worse"]
     def parse_risk(mosquito_risk, mosquito_season, **kwargs):
@@ -239,7 +239,7 @@ def get_result(lat, lng, mydate, state, county=None):
             if mosquito_season is None:
                 # If mosquito season is unknown, overall risk is unknown
                 return 1
-            elif mosquito_season[month_number]:
+            elif mosquito_season[month_no]:
                 # Mosquito season is risk
                 return 3
             else:
@@ -426,7 +426,7 @@ def get_climate(latlng):
                 #growing_ints[month_idx] = month_val
         growing_ints = np.array([data_dict['MLY-GRDD-BASE57'].get(m + 1, 0) for m in range(12)])
         cumulative_gdd = np.cumsum(growing_ints)
-        #growing_value = cumulative_gdd[month_number - 1]
+        #growing_value = cumulative_gdd[month_no - 1]
         growing_bool = cumulative_gdd > 100
 
         # tmin 9.6 C (49.28 F)
@@ -443,7 +443,7 @@ def get_climate(latlng):
         #mosquito_season = False
         #if growing_value > 100:
             ## Tenths of degrees Fahrenheit
-            #month_temp = data_dict['MLY-TAVG-NORMAL'].get(month_number)
+            #month_temp = data_dict['MLY-TAVG-NORMAL'].get(month_no)
             #if month_temp is not None:
                 #month_temp *= 0.1
 

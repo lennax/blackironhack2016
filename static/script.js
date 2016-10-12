@@ -24,11 +24,8 @@ MyApp.checkSubmit = function (e) {
 MyApp.validData = function () {
   "use strict";
   var destinationLen = $('input[name="destination"]').val().length,
-    dateVal = $('input[name="date"]').val();
-  //        console.log(destinationLen, destinationLen > 0);
-  //        console.log(dateVal);
-  //        console.log(/^\d{4}-\d{2}-\d{2}$/.test(dateVal));
-  return destinationLen && /^\d{4}-\d{2}-\d{2}$/.test(dateVal);
+    dateVal = $('select[name="date"]').val();
+  return destinationLen && dateVal >= 0 && dateVal <= 11;
 };
 
 MyApp.initMap = function () {
@@ -70,8 +67,10 @@ MyApp.initMap = function () {
   });
 
   // Default data
-  document.getElementById('date').valueAsDate = new Date();
+//  document.getElementById('date').valueAsDate = new Date();
+  document.getElementById('date').options.selectedIndex = new Date().getMonth();
   document.getElementById('destination').value = "Miami, FL";
+  MyApp.checkSubmit();
   MyApp.submitForm();
 };
 
@@ -561,7 +560,7 @@ MyApp.submitForm = function () {
     destination = $('input[name="destination"]').val();
     //console.log(destination)
     
-    dateInput = $('input[name="date"]').val();
+    dateInput = $('select[name="date"]').val();
 //    console.log(dateInput);
 
     MyApp.geocode(destination).then(function (response) {
@@ -597,7 +596,7 @@ MyApp.submitForm = function () {
       $.getJSON($SCRIPT_ROOT + '/calculate', {
         lat: response.geometry.location.lat(),
         lng: response.geometry.location.lng(),
-        date: $('input[name="date"]').val(),
+        date: dateInput,
         state: state,
         county: county
       },
@@ -643,7 +642,7 @@ MyApp.submitForm = function () {
             $('.popsrc').hover(function () {
               $('#popbox').removeClass('inactive').addClass('highlight');
             }, function () {
-              $('#popbox').addClass('inactive').removeClass('highlight');;
+              $('#popbox').addClass('inactive').removeClass('highlight');
             });
 
             $('.deststate').text(state);
@@ -653,13 +652,12 @@ MyApp.submitForm = function () {
             $('#climatesummary').removeClass('hidden');
             if (data.result.destclimaterisk === 0) {
               $('#climatefalse').removeClass('hidden');
-            } else if (data.result.destclimaterisk == 1) {
+            } else if (data.result.destclimaterisk === 1) {
               $('#climateunknown').removeClass('hidden');
             }
             MyApp.updateTangle(data.result.destclimate_arr,
-                               data.result.inclimate_arr, 
-                               // try to force it to be correct day (timezone)
-                               new Date(dateInput + 'T12:00:00').getMonth());
+                               data.result.inclimate_arr,
+                               dateInput);
           }
         });
     });
