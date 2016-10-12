@@ -34,7 +34,7 @@ MyApp.validData = function () {
 MyApp.initMap = function () {
   "use strict";
 
-  var location, mapCanvas, mapOptions, map, input, autocomplete, infowindow, marker, address;
+  var location, mapCanvas, mapOptions, map, input, autocomplete, infowindow, marker;
 
   // Geographic center of continental US
   //var location = new google.maps.LatLng(39.8282, -98.5795);
@@ -51,25 +51,23 @@ MyApp.initMap = function () {
   };
   MyApp.map = new google.maps.Map(mapCanvas, mapOptions);
 
-  map = MyApp.map;
-
   input = document.getElementById('destination');
 
   //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
   autocomplete = new google.maps.places.Autocomplete(input);
-  autocomplete.bindTo('bounds', map);
+  autocomplete.bindTo('bounds', MyApp.map);
 
-  infowindow = new google.maps.InfoWindow();
-  marker = new google.maps.Marker({
-    map: map,
+  MyApp.infowindow = new google.maps.InfoWindow();
+  MyApp.marker = new google.maps.Marker({
+    map: MyApp.map,
     anchorPoint: new google.maps.Point(0, -29)
   });
 
   autocomplete.addListener('place_changed', function () {
-    infowindow.close();
-    marker.setVisible(false);
     var place = autocomplete.getPlace();
+    MyApp.infowindow.close();
+    MyApp.marker.setVisible(false);
     if (!place.geometry) {
       //      window.alert("Autocomplete's returned place contains no geometry");
       return;
@@ -77,22 +75,22 @@ MyApp.initMap = function () {
 
     // If the place has a geometry, then present it on a map.
     if (place.geometry.viewport) {
-      map.fitBounds(place.geometry.viewport);
+      MyApp.map.fitBounds(place.geometry.viewport);
     } else {
-      map.setCenter(place.geometry.location);
-      map.setZoom(17); // Why 17? Because it looks good.
+      MyApp.map.setCenter(place.geometry.location);
+      MyApp.map.setZoom(17); // Why 17? Because it looks good.
     }
-    marker.setIcon( /** @type {google.maps.Icon} */ ({
-      url: place.icon,
-      size: new google.maps.Size(71, 71),
-      origin: new google.maps.Point(0, 0),
-      anchor: new google.maps.Point(17, 34),
-      scaledSize: new google.maps.Size(35, 35)
-    }));
-    marker.setPosition(place.geometry.location);
-    marker.setVisible(true);
+//    marker.setIcon( /** @type {google.maps.Icon} */ ({
+//      url: place.icon,
+//      size: new google.maps.Size(71, 71),
+//      origin: new google.maps.Point(0, 0),
+//      anchor: new google.maps.Point(17, 34),
+//      scaledSize: new google.maps.Size(35, 35)
+//    }));
+    MyApp.marker.setPosition(place.geometry.location);
+    MyApp.marker.setVisible(true);
 
-    address = '';
+    var address = '';
     if (place.address_components) {
       address = [
         ((place.address_components[0] && place.address_components[0].short_name) || ''),
@@ -101,14 +99,18 @@ MyApp.initMap = function () {
       ].join(' ');
     }
 
-    infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-    infowindow.open(map, marker);
+    MyApp.infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
+    MyApp.infowindow.open(MyApp.map, MyApp.marker);
   });
 
   // Default data
   document.getElementById('date').valueAsDate = new Date();
   document.getElementById('destination').value = "Miami, FL";
   MyApp.submitForm();
+};
+
+MyApp.updateMap = function (place) {
+  
 };
 
 MyApp.drawGauge = function (risk) {
