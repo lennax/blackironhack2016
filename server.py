@@ -2,7 +2,6 @@
 
 # STANDARD LIBRARY
 import datetime
-from functools import update_wrapper
 import json
 import logging
 import unicodedata
@@ -13,18 +12,13 @@ from bs4 import BeautifulSoup
 import numpy as np
 import requests
 
-from flask import Flask, jsonify, render_template, request, make_response, current_app
-# from flask_cors import CORS, cross_origin
-from flask.ext.cors import CORS, cross_origin
+from flask import Flask, jsonify, render_template, request
 app = Flask(__name__)
-CORS(app)
-app.debug = True
+app.debug = False
 
 # Only use the FileHandler from gunicorn.error logger
 gunicorn_error_handlers = logging.getLogger('gunicorn.error').handlers
 app.logger.handlers.extend(gunicorn_error_handlers )
-#app.logger.addHandler(myhandler1)
-#app.logger.addHandler(myhandler2)
 app.logger.info('my info')
 app.logger.debug('debug message')
 
@@ -39,14 +33,6 @@ zika_url = "http://www.cdc.gov/zika/intheus/maps-zika-us.html"
 
 census_api_key = "36a6a8b2ee9eafcc4afb7f7948e2724907c628e3"
 census_url = "http://api.census.gov/data/2015/acs1"
-
-
-#@app.before_first_request
-#def setup_logging():
-    #if not app.debug:
-        ## In production mode, add log handler to sys.stderr.
-        #app.logger.addHandler(logging.StreamHandler())
-        #app.logger.setLevel(logging.INFO)
 
 @app.route('/')
 def index():
@@ -191,7 +177,7 @@ def get_climate():
     # Are mosquitoes active in the destination?
     # Is it mosquito season?
     try:
-        climate_dict = get_climate(latlng=(lat, lng))
+        climate_dict = get_climate_data(latlng=(lat, lng))
     except Exception:
         app.logger.debug(lat)
         app.logger.debug(type(lat))
@@ -201,7 +187,7 @@ def get_climate():
     if climate_dict['error']:
         errors.append(climate_dict['error'])
 
-    in_climate_dict = get_climate(latlng=(40.4237, -86.9212))
+    in_climate_dict = get_climate_data(latlng=(40.4237, -86.9212))
     if in_climate_dict['error']:
         errors.append(in_climate_dict['error'])
 
@@ -250,242 +236,6 @@ def get_climate():
 
     return jsonify(result=result_dict)
 
-#@app.route('/calculate', methods=['GET', 'OPTIONS'])
-def calculate():
-    #    destination = request.form.get('destination')
-    #    date = request.form.get('date')
-    #    destination = request.args.get('destination')
-    lat = request.args.get('lat', type=float)
-    lng = request.args.get('lng', type=float)
-    month_no = request.args.get('date')
-    state = request.args.get('state')
-    county = request.args.get('county')
-
-    errors = list()
-
-    # parse date
-    try:
-        month_no = int(month_no)
-    except (ValueError, TypeError):
-        errors.append('invalid month format')
-    else:
-        if month_no < 0 or month_no > 11:
-            errors.append('invalid month')
-
-    if not state:
-        errors.append('state not specified')
-
-    if errors:
-        msg = ", ".join(errors)
-        return jsonify(result=dict(error=msg))
-
-    kwargs = dict(lat=lat,
-                  lng=lng,
-                  month_no=month_no,
-                  state=state,
-                  county=county)
-    return jsonify(result=get_result(**kwargs))
-
-def get_result(lat, lng, month_no, state, county=None):
-
-    result_dict = dict(
-                       destrisk=None,
-                       inrisk=None,
-                       destclimate_arr=None,
-                       inclimate_arr=None,
-                       destcases=None,
-                       incases=None,
-                       destpop=None,
-                       inpop=None,
-                       error=0)
-  
-    latlng = (lat, lng)
-    app.logger.debug(latlng)
-
-    # Risk factors:
-        # How many people are infected in the state?
-        # How populous is the destination?
-        # Are mosquitoes active in the destination?
-            # Is it mosquito season?
-
-    errors = dict(cases=None,
-                  pop=None,
-                  climate=None)
-
-    risks = dict(cases=None,
-                 state_pop=None,
-                 county_pop=None,
-                 mosquito_risk=None,
-                 mosquito_season=None)
-
-    indiana_risks = dict(cases=None,
-                         state_pop=None,
-                         county_pop=None,
-                         mosquito_risk=None,
-                         mosquito_season=None)
-
-    # How many people are infected in the state?
-    app.logger.debug(state)
-    cases = None
-    app.logger.debug("getting zika data")
-    def add_zika_row(row):
-        case1 = row[1]
-        case2 = row[2]
-        try:
-            case1 = int(case1)
-            case2 = int(case2)
-        except (ValueError, TypeError):
-            app.logger.error("Invalid cases number")
-        else:
-            return case1 + case2
-    zika_data = get_zika()
-    for row in zika_data[1:]:
-        app.logger.debug("{0} {1} {2} {3} ".format(row[0], state, state.lower() == row[0].lower(), row[0].lower() == "indiana"))
-        if row[0].lower() == state.lower():
-            cases = add_zika_row(row)
-            #cases = row[1] + row[2]
-        if row[0].lower() == "indiana":
-            indiana_risks['cases'] = add_zika_row(row)
-            #indiana_risks['cases'] = row[1] + row[2]
-    if cases is None:
-        errors['cases'] = "No case data was found for %s." % state
-    else:
-        risks['cases'] = cases
-
-    # How populous is the destination?
-    pop_dict = get_population(state=state, county=county)
-    if not pop_dict.pop('error'):
-        risks.update(pop_dict)
-    else:
-        pop_err = "No population data was found for %s." % state
-        if county is not None:
-            pop_err += " county %s" % county
-        errors['pop'] = pop_err
-
-    in_pop_dict = get_population(state="indiana", county="tippecanoe")
-    if not in_pop_dict.pop('error'):
-        indiana_risks.update(in_pop_dict)
-
-    # Are mosquitoes active in the destination?
-    # Is it mosquito season?
-    climate_dict = get_climate(latlng=latlng)
-    if climate_dict['error']:
-        errors['climate'] = climate_dict.pop('error')
-    else:
-        risks.update(climate_dict)
-
-    in_climate_dict = get_climate(latlng=(40.4237, -86.9212))
-    if not in_climate_dict['error']:
-        indiana_risks.update(in_climate_dict)
-
-    app.logger.debug(risks)
-
-    result_kwargs = dict(state=state)
-
-    inloc = "Indiana"
-    destination = state
-    pop = risks['state_pop']
-    inpop = indiana_risks['state_pop']
-    if county:
-        inloc = "Tippecanoe County, Indiana"
-        destination = "{0}, {1}".format(county, state)
-        pop = risks['county_pop']
-        inpop = indiana_risks['county_pop']
-
-    result_kwargs['inloc'] = inloc
-    result_kwargs['destination'] = destination
-
-    popsummary = "No population comparison was available. In general, traveling to a less populous area may reduce your risk."
-    if pop is not None and inpop is not None:
-        popratio = pop * 1.0 / inpop
-        if popratio > 2:
-            popsummary = "{destination} is more populous than {inloc}. You could reduce your risk by traveling to a less populous area."
-        elif popratio < 0.5:
-            popsummary = "{destination} is less populous than {inloc}. This may reduce your risk."
-        else:
-            popsummary = "{destination} and {inloc} have similar populations. You could reduce your risk by traveling to a less populous area."
-
-    incases = indiana_risks['cases']
-    cases = risks['cases']
-    casesummary = "No case comparison was available. In general, traveling to an area with fewer cases may reduce your risk."
-    if cases is not None and incases is not None:
-        caseratio = cases * 1.0 / incases
-        if caseratio > 2:
-            casesummary = "{state} has more cases of Zika virus than Indiana. You could reduce your risk by traveling to an area with fewer cases."
-        elif caseratio < 0.5:
-            casesummary = "{state} has fewer cases of Zika virus than Indiana. This may reduce your risk."
-        else:
-            casesummary = "{state} and Indiana have similar numbers of Zika virus cases. You could reduce your risk by traveling to an area with fewer cases."
-
-    # Truth table
-    #mosquito_risk   mosquito_season risk
-    #True    None    unknown
-    #None    None    unknown
-    #True    True    in season
-    #None    True    in season
-    #True    False   out of season
-    #None    False   out of season
-    #False   False   minimal
-    #False   True    minimal
-    #False   None    minimal
-
-    #mosquito_risk_names = ["Minimal", "Unknown", "Out of season", "In season"]
-    #mosquito_risk_classes = ["better", "unknown", "better", "worse"]
-    def parse_risk(mosquito_risk, mosquito_season, **kwargs):
-        if mosquito_risk is None or mosquito_risk:
-            if mosquito_season is None:
-                # If mosquito season is unknown, overall risk is unknown
-                return 1
-            elif mosquito_season[month_no]:
-                # Mosquito season is risk
-                return 3
-            else:
-                # Not mosquito season reduces risk
-                return 2
-        else:
-            # No mosquito risk
-            return 0
-
-    mosquito_risk = parse_risk(**risks)
-    risk_arr = None
-    if risks['mosquito_season'] is not None:
-        risk_arr = [int(v) for v in risks['mosquito_season']]
-
-    #in_mosquito_risk = parse_risk(**indiana_risks)
-    inclimate_arr = None
-    if indiana_risks['mosquito_season'] is not None:
-        inclimate_arr = [int(v) for v in indiana_risks['mosquito_season']]
-
-    result_dict['destcases'] = cases
-    result_dict['incases'] = incases
-
-    result_dict['destpop'] = pop
-    result_dict['inpop'] = inpop
-
-    result_dict['casesummary'] = casesummary.format(state=state)
-    result_dict['popsummary'] = popsummary.format(**result_kwargs)
-
-    result_dict['destclimaterisk'] = mosquito_risk
-
-    result_dict['destclimate_arr'] = risk_arr
-    result_dict['inclimate_arr'] = inclimate_arr
-    app.logger.debug(result_dict['destclimate_arr'])
-    app.logger.debug(result_dict['inclimate_arr'])
-
-    result_dict['destrisk'] = rate_per_mil(**risks)
-    result_dict['inrisk'] = rate_per_mil(**indiana_risks)
-
-    return result_dict
-
-def rate_per_mil(cases, state_pop, **kwargs):
-    if cases is not None and state_pop:
-        # Pseudocount
-        if cases == 0:
-            cases = 1
-        rate = cases * 1.0 / state_pop
-        rate_per_m = rate * 1000000
-        return rate_per_m
-
 # radius of Earth in miles
 earth_radius = 3958.75
 
@@ -511,7 +261,7 @@ def get_distances(latlng, coord_array):
 
     return lng_diff
 
-def get_climate(latlng):
+def get_climate_data(latlng):
 
     # Are mosquitoes active in the destination?
     # Is it mosquito season?
@@ -615,15 +365,8 @@ def get_climate(latlng):
     else:
         # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3700474/
         # roughly 100 degree days for Culex
-        #growing_dict = data_dict['MLY-GRDD-BASE57']
-        #growing_ints = [0] * 12
-        #for month_idx in range(12):
-            #month_val = growing_dict.get(month_idx + 1)
-            #if month_val is not None:
-                #growing_ints[month_idx] = month_val
         growing_ints = np.array([data_dict['MLY-GRDD-BASE57'].get(m + 1, 0) for m in range(12)])
         cumulative_gdd = np.cumsum(growing_ints)
-        #growing_value = cumulative_gdd[month_no - 1]
         growing_bool = cumulative_gdd > 100
 
         # tmin 9.6 C (49.28 F)
@@ -637,16 +380,6 @@ def get_climate(latlng):
 
         mosquito_season = growing_bool & month_bool
 
-        #mosquito_season = False
-        #if growing_value > 100:
-            ## Tenths of degrees Fahrenheit
-            #month_temp = data_dict['MLY-TAVG-NORMAL'].get(month_no)
-            #if month_temp is not None:
-                #month_temp *= 0.1
-
-
-            #if month_temp >= tmin and month_temp <= tmax:
-                #mosquito_season = True
         result_dict['mosquito_season'] = mosquito_season
 
     return result_dict
