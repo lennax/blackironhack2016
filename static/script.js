@@ -617,10 +617,11 @@ MyApp.submitForm = function () {
       //      console.log(county);
       
       $.when(
-        $.getJSON($SCRIPT_ROOT + '/get_pop', {
-          state: state,
-          county: county
-        }, function (data) {
+        $.ajax({
+          url: $SCRIPT_ROOT + '/get_pop',
+          dataType: 'json',
+          data: {state: state, county: county},
+          success: function (data) {
           // Display population
           var pop_x, pop_y, popColor;
           if (data.result.error) {
@@ -641,23 +642,26 @@ MyApp.submitForm = function () {
               pop_x, pop_y, popColor);          
             $('#popsummary').text(data.result.popsummary);
           }
-        }),
-        $.getJSON($SCRIPT_ROOT + '/get_cases', {
-          state: state
-        }, function (data) {
-          // Display cases
-          var caseColor;
-          if (data.result.error) {
-            $('#casesummary').text("Error: " + data.result.error);
-            return 1;
-          } else {
-            caseColor = 'rgb(229, 170, 38)';
-            incases = data.result.incases;
-            destcases = data.result.destcases;
-            // update case and pop charts
-            MyApp.updateBar('casebox',
-              ['IN', stateAbbr], [incases, destcases], caseColor);
-            $('#casesummary').text(data.result.casesummary);
+        }}),
+        $.ajax({
+          url: $SCRIPT_ROOT + '/get_cases',
+          dataType: 'json',
+          data: {state: state},
+          success: function (data) {
+            // Display cases
+            var caseColor;
+            if (data.result.error) {
+              $('#casesummary').text("Error: " + data.result.error);
+              return 1;
+            } else {
+              caseColor = 'rgb(229, 170, 38)';
+              incases = data.result.incases;
+              destcases = data.result.destcases;
+              // update case and pop charts
+              MyApp.updateBar('casebox',
+                ['IN', stateAbbr], [incases, destcases], caseColor);
+              $('#casesummary').text(data.result.casesummary);
+            }
           }
         })
       ).then(function () {
@@ -680,12 +684,15 @@ MyApp.submitForm = function () {
         // Risk fail
       });
       
-      $.getJSON($SCRIPT_ROOT + '/get_climate', {
+      $.ajax({
+        url: $SCRIPT_ROOT + '/get_climate',
+        dataType: 'json',
+        data: {
           lat: response.geometry.location.lat(),
           lng: response.geometry.location.lng(),
           date: dateInput
         },
-        function (data) {
+        success: function (data) {
           // Display climate
           if (data.result.error) {
             $('#climateerror').text("Error: " + data.result.error);
@@ -701,66 +708,10 @@ MyApp.submitForm = function () {
             console.log(data.result.inclimate_arr);
             MyApp.updateTangle(data.result.destclimate_arr,
               data.result.inclimate_arr,
-              $('select[name="date"]').val());
+              dateInput);
           }
+        }
       });
-      
-      
-//      $.getJSON($SCRIPT_ROOT + '/calculate', {
-//          lat: response.geometry.location.lat(),
-//          lng: response.geometry.location.lng(),
-//          date: dateInput,
-//          state: state,
-//          county: county
-//        },
-//        function (data) {
-//          var pop_y, case_y, popColor, caseColor;
-//          if (data.result.error) {
-//            $('#result').text("Error: " + data.result.error);
-//            return 1;
-//          } else {
-//            //console.log(data.result);
-//            //$('input[name=destination]').focus().select();
-//
-//            //MyApp.drawGauge(data.result.risk);
-//            //console.log(data.result.destrisk);
-//            //console.log(data.result.inrisk);
-//            MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
-//            //console.log(data.result.text)
-//
-//            popColor = 'rgb(119, 190, 222)';
-//            caseColor = 'rgb(229, 170, 38)';
-//
-//            // update case and pop charts
-//            case_y = ['IN', stateAbbr];
-//            MyApp.updateBar('casebox',
-//              case_y, [data.result.incases,
-//                             data.result.destcases],
-//              caseColor);
-//            if (county !== null && county !== 'undefined') {
-//              pop_y = ['Tippecanoe', county.replace('County', '')];
-//            } else {
-//              pop_y = case_y;
-//            }
-//            MyApp.updateBar('popbox',
-//              pop_y, [data.result.inpop,
-//                             data.result.destpop],
-//              popColor);
-//
-//            $('#casesummary').text(data.result.casesummary);
-//            $('#popsummary').text(data.result.popsummary);
-//
-//            $('#climatesummary').removeClass('hidden');
-//            if (data.result.destclimaterisk === 0) {
-//              $('#climatefalse').removeClass('hidden');
-//            } else if (data.result.destclimaterisk === 1) {
-//              $('#climateunknown').removeClass('hidden');
-//            }
-//            MyApp.updateTangle(data.result.destclimate_arr,
-//              data.result.inclimate_arr,
-//              dateInput);
-//          }
-//        });
     });
   }
 
