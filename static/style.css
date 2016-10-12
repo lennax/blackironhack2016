@@ -133,6 +133,7 @@ body.loading .spinner {
   background: rgba(255, 255, 255, 0.8);
 }
 .TKAdjustableNumber {
+  display: inline-block;
   padding: 2px;
   color: #fc5f0c;
   background-color: #e6e6e6;
