@@ -622,27 +622,29 @@ MyApp.submitForm = function () {
           dataType: 'json',
           data: {state: state, county: county},
           success: function (data) {
-          // Display population
-          var pop_x, pop_y, popColor;
-          if (data.result.error) {
-            $('#popsummary').text("Error: " + data.result.error);
-            return 1;
-          } else {
-            popColor = 'rgb(119, 190, 222)';
-            instatepop = data.result.instatepop;
-            deststatepop = data.result.deststatepop;
-            if (county !== null && county !== 'undefined') {
-              pop_x = ['Tippecanoe', county.replace('County', '')];
-              pop_y = [data.result.incountypop, data.result.destcountypop];
+            // Display population
+            var pop_x, pop_y, popColor;
+            if (data.result.error) {
+              $('#popsummary').text("Error: " + data.result.error);
+              return 1;
             } else {
-              pop_x = ['IN', stateAbbr];
-              pop_y = [instatepop, deststatepop];
+              popColor = 'rgb(119, 190, 222)';
+              instatepop = data.result.instatepop;
+              deststatepop = data.result.deststatepop;
+              if (county !== null && county !== 'undefined') {
+                pop_x = ['Tippecanoe', county.replace('County', '')];
+                pop_y = [data.result.incountypop, data.result.destcountypop];
+              } else {
+                pop_x = ['IN', stateAbbr];
+                pop_y = [instatepop, deststatepop];
+              }
+              MyApp.updateBar('popbox',
+                pop_x, pop_y, popColor);          
+              $('#popsummary').text(data.result.popsummary);
             }
-            MyApp.updateBar('popbox',
-              pop_x, pop_y, popColor);          
-            $('#popsummary').text(data.result.popsummary);
-          }
-        }}),
+          },
+          timeout: 10000
+        }),
         $.ajax({
           url: $SCRIPT_ROOT + '/get_cases',
           dataType: 'json',
@@ -662,7 +664,8 @@ MyApp.submitForm = function () {
                 ['IN', stateAbbr], [incases, destcases], caseColor);
               $('#casesummary').text(data.result.casesummary);
             }
-          }
+          },
+          timeout: 10000
         })
       ).then(function () {
         // Display risk rate
@@ -710,7 +713,8 @@ MyApp.submitForm = function () {
               data.result.inclimate_arr,
               dateInput);
           }
-        }
+        },
+        timeout: 10000
       });
     });
   }
