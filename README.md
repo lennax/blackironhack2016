@@ -73,7 +73,6 @@ Build Case
     - python
     - gunicorn
     - flask
-    - flask-cors
     - numpy
     - beautifulsoup4
 
