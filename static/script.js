@@ -76,6 +76,10 @@ MyApp.initMap = function () {
 };
 
 MyApp.updateMap = function (place) {
+  "use strict";
+
+  var placeName, address = '';
+
   MyApp.infowindow.close();
   MyApp.marker.setVisible(false);
   if (!place.geometry) {
@@ -88,19 +92,12 @@ MyApp.updateMap = function (place) {
     MyApp.map.fitBounds(place.geometry.viewport);
   } else {
     MyApp.map.setCenter(place.geometry.location);
-    MyApp.map.setZoom(17); // Why 17? Because it looks good.
+    MyApp.map.setZoom(17);
   }
-//    marker.setIcon( /** @type {google.maps.Icon} */ ({
-//      url: place.icon,
-//      size: new google.maps.Size(71, 71),
-//      origin: new google.maps.Point(0, 0),
-//      anchor: new google.maps.Point(17, 34),
-//      scaledSize: new google.maps.Size(35, 35)
-//    }));
+
   MyApp.marker.setPosition(place.geometry.location);
   MyApp.marker.setVisible(true);
 
-  var address = '';
   if (place.address_components) {
     address = [
       ((place.address_components[0] && place.address_components[0].short_name) || ''),
@@ -109,7 +106,13 @@ MyApp.updateMap = function (place) {
     ].join(' ');
   }
 
-  MyApp.infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
+  if (typeof place.name !== 'undefined') {
+    placeName = place.name;
+  } else {
+    placeName = ((place.address_components[0] && place.address_components[0].short_name) || '');
+  }
+
+  MyApp.infowindow.setContent('<div><strong>' + placeName + '</strong><br>' + address);
   MyApp.infowindow.open(MyApp.map, MyApp.marker);
 };
 
@@ -560,11 +563,7 @@ MyApp.submitForm = function () {
 
     MyApp.geocode(destination).then(function (response) {
       //console.log("Success!", response);
-      MyApp.map.fitBounds(response.geometry.viewport);
-      var marker = new google.maps.Marker({
-        map: MyApp.map,
-        position: response.geometry.location
-      });
+      MyApp.updateMap(response);
       return response;
     }, function (error) {
       alert('Geocode not successful: ' + status);
@@ -593,12 +592,12 @@ MyApp.submitForm = function () {
       console.log(state);
       console.log(county);
       $.getJSON($SCRIPT_ROOT + '/calculate', {
-          lat: response.geometry.location.lat(),
-          lng: response.geometry.location.lng(),
-          date: $('input[name="date"]').val(),
-          state: state,
-          county: county
-        },
+        lat: response.geometry.location.lat(),
+        lng: response.geometry.location.lng(),
+        date: $('input[name="date"]').val(),
+        state: state,
+        county: county
+      },
         function (data) {
           var pop_y, case_y, popColor, caseColor;
           if (data.result.error) {
