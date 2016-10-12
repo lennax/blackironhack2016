@@ -67,7 +67,7 @@ MyApp.initMap = function () {
   });
 
   // Default data
-//  document.getElementById('date').valueAsDate = new Date();
+  //  document.getElementById('date').valueAsDate = new Date();
   document.getElementById('date').options.selectedIndex = new Date().getMonth();
   document.getElementById('destination').value = "Miami, FL";
   MyApp.checkSubmit();
@@ -371,7 +371,7 @@ MyApp.drawLadder = function (div) {
 MyApp.updateLadder = function (div, destcases, incases) {
   "use strict";
 
-  var caseColor, caseMarker, caseColorIn, caseMarkerIn, zikatrace, zikatrace_in;
+  var caseColor, caseMarker, caseColorIn, caseMarkerIn, zikatrace, zikatrace_in, nTraces, annotations;
 
   caseColor = 'rgba(211, 115, 38, 0.95)';
   caseMarker = {
@@ -419,49 +419,57 @@ MyApp.updateLadder = function (div, destcases, incases) {
     marker: caseMarkerIn
   };
 
-  Plotly.addTraces(div, [zikatrace, zikatrace_in]);
+  annotations = [
+    {
+      x: Math.log10(incases),
+      y: Math.log10(incases),
+      xref: 'x',
+      yref: 'y',
+      text: 'Zika Virus Syndrome (IN)',
+      //        font: {
+      //          color: caseColor,
+      //        },
+      bgcolor: 'rgba(255, 255, 255, 0.8)',
+      bordercolor: caseColorIn,
+      borderwidth: 2,
+      showarrow: true,
+      arrowwidth: 2,
+      arrowcolor: 'rgb(67, 67, 67)',
+      arrowhead: 2,
+      ax: 100,
+      ay: -10
+    },
+    {
+      x: Math.log10(destcases),
+      y: Math.log10(destcases),
+      xref: 'x',
+      yref: 'y',
+      text: 'Zika Virus Syndrome',
+      //        font: {
+      //          color: caseColor,
+      //        },
+      bgcolor: 'rgba(255, 255, 255, 0.8)',
+      bordercolor: caseColor,
+      borderwidth: 2,
+      showarrow: true,
+      arrowwidth: 2,
+      arrowcolor: 'rgb(67, 67, 67)',
+      arrowhead: 2,
+      ax: 100,
+      ay: -10
+    }
+  ]
+
+  nTraces = document.getElementById(div).data.length
+  if (nTraces <= 3) {
+    Plotly.addTraces(div, [zikatrace_in, zikatrace]);
+  } else {
+    Plotly.deleteTraces(div, 4);
+    Plotly.addTraces(div, [zikatrace]);
+  }
 
   Plotly.relayout(div, {
-    annotations: [
-      {
-        x: Math.log10(incases),
-        y: Math.log10(incases),
-        xref: 'x',
-        yref: 'y',
-        text: 'Zika Virus Syndrome (IN)',
-        //        font: {
-        //          color: caseColor,
-        //        },
-        bgcolor: 'rgba(255, 255, 255, 0.8)',
-        bordercolor: caseColorIn,
-        borderwidth: 2,
-        showarrow: true,
-        arrowwidth: 2,
-        arrowcolor: 'rgb(67, 67, 67)',
-        arrowhead: 2,
-        ax: 100,
-        ay: -10
-      },
-      {
-        x: Math.log10(destcases),
-        y: Math.log10(destcases),
-        xref: 'x',
-        yref: 'y',
-        text: 'Zika Virus Syndrome',
-        //        font: {
-        //          color: caseColor,
-        //        },
-        bgcolor: 'rgba(255, 255, 255, 0.8)',
-        bordercolor: caseColor,
-        borderwidth: 2,
-        showarrow: true,
-        arrowwidth: 2,
-        arrowcolor: 'rgb(67, 67, 67)',
-        arrowhead: 2,
-        ax: 100,
-        ay: -10
-      }
-    ]
+    annotations: annotations
   });
 };
 
@@ -559,9 +567,9 @@ MyApp.submitForm = function () {
 
     destination = $('input[name="destination"]').val();
     //console.log(destination)
-    
+
     dateInput = $('select[name="date"]').val();
-//    console.log(dateInput);
+    //    console.log(dateInput);
 
     MyApp.geocode(destination).then(function (response) {
       //console.log("Success!", response);
@@ -575,7 +583,7 @@ MyApp.submitForm = function () {
       //            console.log(response.address_components);
       for (x = 0; x < response.address_components.length; x += 1) {
         component = response.address_components[x];
-//        console.log(component);
+        //        console.log(component);
         if (component.types[0] === "country") {
           country = component.long_name;
         } else if (component.types[0] === "administrative_area_level_1") {
@@ -590,16 +598,16 @@ MyApp.submitForm = function () {
         $('#result').text("Error: data not available outside the US");
         return 1;
       }
-//      console.log(country);
-//      console.log(state);
-//      console.log(county);
+      //      console.log(country);
+      //      console.log(state);
+      //      console.log(county);
       $.getJSON($SCRIPT_ROOT + '/calculate', {
-        lat: response.geometry.location.lat(),
-        lng: response.geometry.location.lng(),
-        date: dateInput,
-        state: state,
-        county: county
-      },
+          lat: response.geometry.location.lat(),
+          lng: response.geometry.location.lng(),
+          date: dateInput,
+          state: state,
+          county: county
+        },
         function (data) {
           var pop_y, case_y, popColor, caseColor;
           if (data.result.error) {
@@ -656,8 +664,8 @@ MyApp.submitForm = function () {
               $('#climateunknown').removeClass('hidden');
             }
             MyApp.updateTangle(data.result.destclimate_arr,
-                               data.result.inclimate_arr,
-                               dateInput);
+              data.result.inclimate_arr,
+              dateInput);
           }
         });
     });
