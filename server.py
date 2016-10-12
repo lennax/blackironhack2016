@@ -90,7 +90,7 @@ def calculate():
 
 def get_result(lat, lng, mydate, state, county=None):
 
-    result_dict = dict(text=None,
+    result_dict = dict(
                        destrisk=None,
                        inrisk=None,
                        destclimate_arr=None,
@@ -180,56 +180,9 @@ def get_result(lat, lng, mydate, state, county=None):
     if not in_climate_dict['error']:
         indiana_risks.update(in_climate_dict)
 
-    result_table = """
-    <table class="tg">
-     <tr>
-       <th>Risk Factor<br></th>
-       <th>{inloc}<br></th>
-       <th>{destination}<br></th>
-     </tr>
-     <tr>
-       <td>Cases statewide</td>
-       <td class="{incasesclass}">{incases}<br></td>
-       <td class="{casesclass}">{cases}</td>
-     </tr>
-     <tr>
-       <td>Population</td>
-       <td class="{inpopclass}">{inpop}</td>
-       <td class="{popclass}">{pop}</td>
-     </tr>
-     <tr>
-       <td>Mosquitoes</td>
-       <td class="{inclimateclass}">{inclimate}</td>
-       <td class="{climateclass}">{climate}</td>
-     </tr>
-   </table>
-    """
-    result_text = """
-   <ol>
-   <li>{casesummary}</li>
-   <li>{popsummary}</li>
-   <li>CLIMATESUMMARY</li>
-   </ol>
-     """
-    #"""
-    #{destination} has {pop} people.
-    #The state of {dest_state} has {cases} reported cases of Zika virus.
-    #{mosquito_phrase}
-    #Compared to Indiana, your destination {cases_cmp}.
-    #{case_vs_pop_prep}, {pop_cmp}.
-    #{mosquito_cmp_phrase}
-    #"""
-
     app.logger.debug(risks)
 
     result_kwargs = dict(state=state)
-
-    # Initialize classes to "unknown"
-    for datatype in "cases", "pop", "climate":
-        for prefix in "", "in":
-            result_kwargs['{0}{1}class'.format(prefix, datatype)] = "unknown"
-
-    month_name = mydate.strftime("%B")
 
     inloc = "Indiana"
     destination = state
@@ -240,33 +193,19 @@ def get_result(lat, lng, mydate, state, county=None):
         destination = "{0}, {1}".format(county, state)
         pop = risks['county_pop']
         inpop = indiana_risks['county_pop']
+
     result_kwargs['inloc'] = inloc
     result_kwargs['destination'] = destination
-
-    result_dict['inpop'] = inpop
-    result_dict['destpop'] = pop
 
     popsummary = "No population comparison was available. In general, traveling to a less populous area may reduce your risk."
     if pop is not None and inpop is not None:
         popratio = pop * 1.0 / inpop
         if popratio > 2:
-            inpopclass = "better"
-            popclass = "worse"
             popsummary = "{destination} is more populous than {inloc}. You could reduce your risk by traveling to a less populous area."
         elif popratio < 0.5:
-            inpopclass = "worse"
-            popclass = "better"
             popsummary = "{destination} is less populous than {inloc}. This may reduce your risk."
         else:
-            inpopclass = "same"
-            popclass = "same"
             popsummary = "{destination} and {inloc} have similar populations. You could reduce your risk by traveling to a less populous area."
-        result_kwargs['inpopclass'] = inpopclass
-        result_kwargs['popclass'] = popclass
-    result_kwargs['pop'] = "{0:,}".format(pop) if pop is not None else "-"
-    result_kwargs['inpop'] = "{0:,}".format(inpop) if inpop is not None else "-"
-    result_kwargs['popsummary'] = popsummary.format(**result_kwargs)
-    result_dict['popsummary'] = popsummary.format(**result_kwargs)
 
     incases = indiana_risks['cases']
     cases = risks['cases']
@@ -274,23 +213,11 @@ def get_result(lat, lng, mydate, state, county=None):
     if cases is not None and incases is not None:
         caseratio = cases * 1.0 / incases
         if caseratio > 2:
-            incaseclass = "better"
-            caseclass = "worse"
             casesummary = "{state} has more cases of Zika virus than Indiana. You could reduce your risk by traveling to an area with fewer cases."
         elif caseratio < 0.5:
-            incaseclass = "worse"
-            caseclass = "better"
             casesummary = "{state} has fewer cases of Zika virus than Indiana. This may reduce your risk."
         else:
-            incaseclass = "same"
-            caseclass = "same"
             casesummary = "{state} and Indiana have similar numbers of Zika virus cases. You could reduce your risk by traveling to an area with fewer cases."
-        result_kwargs['incasesclass'] = incaseclass
-        result_kwargs['casesclass'] = caseclass
-    result_kwargs['cases'] = "{0:,}".format(cases) if cases is not None else "-"
-    result_kwargs['incases'] = "{0:,}".format(incases) if incases is not None else "-"
-    result_kwargs['casesummary'] = casesummary.format(state=state)
-    result_dict['casesummary'] = casesummary.format(state=state)
 
     # Truth table
     #mosquito_risk   mosquito_season risk
@@ -305,8 +232,8 @@ def get_result(lat, lng, mydate, state, county=None):
     #False   None    minimal
 
     month_number = mydate.month
-    mosquito_risk_names = ["Minimal", "Unknown", "Out of season", "In season"]
-    mosquito_risk_classes = ["better", "unknown", "better", "worse"]
+    #mosquito_risk_names = ["Minimal", "Unknown", "Out of season", "In season"]
+    #mosquito_risk_classes = ["better", "unknown", "better", "worse"]
     def parse_risk(mosquito_risk, mosquito_season, **kwargs):
         if mosquito_risk is None or mosquito_risk:
             if mosquito_season is None:
@@ -322,29 +249,32 @@ def get_result(lat, lng, mydate, state, county=None):
             # No mosquito risk
             return 0
 
-    #risk_names = ["are not", "are"]
-    in_mosquito_risk = parse_risk(**indiana_risks)
-    if indiana_risks['mosquito_season'] is not None:
-        #inclimate_arr = [risk_names[v] for v in indiana_risks['mosquito_season']]
-        inclimate_arr = [int(v) for v in indiana_risks['mosquito_season']]
-        result_dict['inclimate_arr'] = inclimate_arr
-    app.logger.debug(result_dict['inclimate_arr'])
-    result_kwargs['inclimate'] = mosquito_risk_names[in_mosquito_risk]
-    result_kwargs['inclimateclass'] = mosquito_risk_classes[in_mosquito_risk]
-
     mosquito_risk = parse_risk(**risks)
+    risk_arr = None
     if risks['mosquito_season'] is not None:
-        #risk_arr = [risk_names[v] for v in risks['mosquito_season']]
         risk_arr = [int(v) for v in risks['mosquito_season']]
-        result_dict['destclimate_arr'] = risk_arr
-    app.logger.debug(result_dict['destclimate_arr'])
-    result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
-    result_kwargs['climateclass'] = mosquito_risk_classes[mosquito_risk]
+
+    #in_mosquito_risk = parse_risk(**indiana_risks)
+    inclimate_arr = None
+    if indiana_risks['mosquito_season'] is not None:
+        inclimate_arr = [int(v) for v in indiana_risks['mosquito_season']]
 
     result_dict['destcases'] = cases
     result_dict['incases'] = incases
 
-    result_dict['text'] = result_text.format(**result_kwargs)
+    result_dict['destpop'] = pop
+    result_dict['inpop'] = inpop
+
+    result_dict['casesummary'] = casesummary.format(state=state)
+    result_dict['popsummary'] = popsummary.format(**result_kwargs)
+
+    result_dict['destclimaterisk'] = mosquito_risk
+
+    result_dict['destclimate_arr'] = risk_arr
+    result_dict['inclimate_arr'] = inclimate_arr
+    app.logger.debug(result_dict['destclimate_arr'])
+    app.logger.debug(result_dict['inclimate_arr'])
+
     result_dict['destrisk'] = rate_per_mil(**risks)
     result_dict['inrisk'] = rate_per_mil(**indiana_risks)
 
