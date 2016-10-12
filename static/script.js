@@ -643,6 +643,9 @@ MyApp.submitForm = function () {
               $('#popsummary').text(data.result.popsummary);
             }
           },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            $('#popsummary').text("Server error, please try again later.");
+          },
           timeout: 10000
         }),
         $.ajax({
@@ -664,6 +667,9 @@ MyApp.submitForm = function () {
                 ['IN', stateAbbr], [incases, destcases], caseColor);
               $('#casesummary').text(data.result.casesummary);
             }
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            $('#casesummary').text("Server error, please try again later.");
           },
           timeout: 10000
         })
@@ -714,6 +720,9 @@ MyApp.submitForm = function () {
               dateInput);
           }
         },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            $('#climateerror').text("Server error, please try again later.");
+          },
         timeout: 10000
       });
     });
