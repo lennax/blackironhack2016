@@ -598,6 +598,19 @@ MyApp.submitForm = function () {
         $('#result').text("Error: data not available outside the US");
         return 1;
       }
+
+      $('.deststate').text(state);
+      $('.casesrc').hover(function () {
+        $('#casebox').removeClass('inactive').addClass('highlight');
+      }, function () {
+        $('#casebox').addClass('inactive').removeClass('highlight');
+      });
+      $('.popsrc').hover(function () {
+        $('#popbox').removeClass('inactive').addClass('highlight');
+      }, function () {
+        $('#popbox').addClass('inactive').removeClass('highlight');
+      });
+
       //      console.log(country);
       //      console.log(state);
       //      console.log(county);
@@ -642,18 +655,6 @@ MyApp.submitForm = function () {
                              data.result.destpop],
               popColor);
 
-            $('.casesrc').hover(function () {
-              $('#casebox').removeClass('inactive').addClass('highlight');
-            }, function () {
-              $('#casebox').addClass('inactive').removeClass('highlight');
-            });
-            $('.popsrc').hover(function () {
-              $('#popbox').removeClass('inactive').addClass('highlight');
-            }, function () {
-              $('#popbox').addClass('inactive').removeClass('highlight');
-            });
-
-            $('.deststate').text(state);
             $('#casesummary').text(data.result.casesummary);
             $('#popsummary').text(data.result.popsummary);
 
