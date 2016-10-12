@@ -98,7 +98,12 @@ body.loading .spinner {
 }
 
 .inactive {
-  opacity: 0.8;
+  opacity: 0.75;
+}
+
+.highlight {
+  opacity: 1;
+/*  border: 1px solid black;*/
 }
 
 .casesrc {
