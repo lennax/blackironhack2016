@@ -66,41 +66,7 @@ MyApp.initMap = function () {
 
   autocomplete.addListener('place_changed', function () {
     var place = autocomplete.getPlace();
-    MyApp.infowindow.close();
-    MyApp.marker.setVisible(false);
-    if (!place.geometry) {
-      //      window.alert("Autocomplete's returned place contains no geometry");
-      return;
-    }
-
-    // If the place has a geometry, then present it on a map.
-    if (place.geometry.viewport) {
-      MyApp.map.fitBounds(place.geometry.viewport);
-    } else {
-      MyApp.map.setCenter(place.geometry.location);
-      MyApp.map.setZoom(17); // Why 17? Because it looks good.
-    }
-//    marker.setIcon( /** @type {google.maps.Icon} */ ({
-//      url: place.icon,
-//      size: new google.maps.Size(71, 71),
-//      origin: new google.maps.Point(0, 0),
-//      anchor: new google.maps.Point(17, 34),
-//      scaledSize: new google.maps.Size(35, 35)
-//    }));
-    MyApp.marker.setPosition(place.geometry.location);
-    MyApp.marker.setVisible(true);
-
-    var address = '';
-    if (place.address_components) {
-      address = [
-        ((place.address_components[0] && place.address_components[0].short_name) || ''),
-        ((place.address_components[1] && place.address_components[1].short_name) || ''),
-        ((place.address_components[2] && place.address_components[2].short_name) || '')
-      ].join(' ');
-    }
-
-    MyApp.infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-    MyApp.infowindow.open(MyApp.map, MyApp.marker);
+    MyApp.updateMap(place);
   });
 
   // Default data
@@ -110,7 +76,41 @@ MyApp.initMap = function () {
 };
 
 MyApp.updateMap = function (place) {
-  
+  MyApp.infowindow.close();
+  MyApp.marker.setVisible(false);
+  if (!place.geometry) {
+    //      window.alert("Autocomplete's returned place contains no geometry");
+    return;
+  }
+
+  // If the place has a geometry, then present it on a map.
+  if (place.geometry.viewport) {
+    MyApp.map.fitBounds(place.geometry.viewport);
+  } else {
+    MyApp.map.setCenter(place.geometry.location);
+    MyApp.map.setZoom(17); // Why 17? Because it looks good.
+  }
+//    marker.setIcon( /** @type {google.maps.Icon} */ ({
+//      url: place.icon,
+//      size: new google.maps.Size(71, 71),
+//      origin: new google.maps.Point(0, 0),
+//      anchor: new google.maps.Point(17, 34),
+//      scaledSize: new google.maps.Size(35, 35)
+//    }));
+  MyApp.marker.setPosition(place.geometry.location);
+  MyApp.marker.setVisible(true);
+
+  var address = '';
+  if (place.address_components) {
+    address = [
+      ((place.address_components[0] && place.address_components[0].short_name) || ''),
+      ((place.address_components[1] && place.address_components[1].short_name) || ''),
+      ((place.address_components[2] && place.address_components[2].short_name) || '')
+    ].join(' ');
+  }
+
+  MyApp.infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
+  MyApp.infowindow.open(MyApp.map, MyApp.marker);
 };
 
 MyApp.drawGauge = function (risk) {
