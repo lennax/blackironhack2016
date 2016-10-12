@@ -553,10 +553,9 @@ MyApp.submitForm = function () {
 
   if (MyApp.validData()) {
 
-    // Clear result div            
-    $('#casesummary').text('');
-    $('#popsummary').text('');
-    $('#climatesummary').addClass('hidden');
+    // Clear result divs
+    $('.addtext').text('');
+    $('.togglehidden').addClass('hidden');
 
     destination = $('input[name="destination"]').val();
     //console.log(destination)
@@ -648,6 +647,11 @@ MyApp.submitForm = function () {
             $('#popsummary').text(data.result.popsummary);
 
             $('#climatesummary').removeClass('hidden');
+            if (data.result.destclimaterisk === 0) {
+              $('#climatefalse').removeClass('hidden');
+            } else if (data.result.destclimaterisk == 1) {
+              $('#climateunknown').removeClass('hidden');
+            }
             MyApp.updateTangle(data.result.destclimate_arr, data.result.inclimate_arr);
           }
         });
