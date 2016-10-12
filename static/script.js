@@ -519,12 +519,12 @@ MyApp.setUpTangle = function (divId) {
   });
 };
 
-MyApp.updateTangle = function (risks, inrisks) {
+MyApp.updateTangle = function (risks, inrisks, month) {
   "use strict";
   MyApp.tangle.setValues({
     riskArr: risks,
     inriskArr: inrisks,
-    month: new Date().getMonth()
+    month: month
   });
 };
 
@@ -550,7 +550,7 @@ MyApp.geocode = function (address) {
 MyApp.submitForm = function () {
   "use strict";
 
-  var destination;
+  var destination, dateInput;
 
   if (MyApp.validData()) {
 
@@ -560,6 +560,9 @@ MyApp.submitForm = function () {
 
     destination = $('input[name="destination"]').val();
     //console.log(destination)
+    
+    dateInput = $('input[name="date"]').val();
+//    console.log(dateInput);
 
     MyApp.geocode(destination).then(function (response) {
       //console.log("Success!", response);
@@ -573,7 +576,7 @@ MyApp.submitForm = function () {
       //            console.log(response.address_components);
       for (x = 0; x < response.address_components.length; x += 1) {
         component = response.address_components[x];
-        console.log(component);
+//        console.log(component);
         if (component.types[0] === "country") {
           country = component.long_name;
         } else if (component.types[0] === "administrative_area_level_1") {
@@ -588,9 +591,9 @@ MyApp.submitForm = function () {
         $('#result').text("Error: data not available outside the US");
         return 1;
       }
-      console.log(country);
-      console.log(state);
-      console.log(county);
+//      console.log(country);
+//      console.log(state);
+//      console.log(county);
       $.getJSON($SCRIPT_ROOT + '/calculate', {
         lat: response.geometry.location.lat(),
         lng: response.geometry.location.lng(),
@@ -653,7 +656,10 @@ MyApp.submitForm = function () {
             } else if (data.result.destclimaterisk == 1) {
               $('#climateunknown').removeClass('hidden');
             }
-            MyApp.updateTangle(data.result.destclimate_arr, data.result.inclimate_arr);
+            MyApp.updateTangle(data.result.destclimate_arr,
+                               data.result.inclimate_arr, 
+                               // try to force it to be correct day (timezone)
+                               new Date(dateInput + 'T12:00:00').getMonth());
           }
         });
     });
