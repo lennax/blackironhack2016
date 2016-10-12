@@ -460,7 +460,7 @@ MyApp.updateLadder = function (div, destcases, incases) {
   });
 };
 
-MyApp.setUpTangle = function (divId, risks, inrisks) {
+MyApp.setUpTangle = function (divId) {
   "use strict";
   
   var element, months, tangle;
@@ -485,17 +485,19 @@ MyApp.setUpTangle = function (divId, risks, inrisks) {
   Tangle.formats.month = function (value) { // formats 0.42 as "42%"
     return months[value];
   };
-
-  tangle = new Tangle(element, {
+  
+  MyApp.tangle = new Tangle(element, {
     initialize: function () {
+      this.riskArr = null;
+      this.inriskArr = null;
       this.month = new Date().getMonth();
     },
     update: function () {
-      if (risks !== null && risks !== 'undefined') {
-        this.risk = risks[this.month];
+      if (this.riskArr !== null && this.riskArr !== 'undefined') {
+        this.risk = this.riskArr[this.month];
       }
-      if (inrisks !== null && inrisks !== 'undefined') {
-        this.inrisk = inrisks[this.month];
+      if (this.inriskArr !== null && this.inriskArr !== 'undefined') {
+        this.inrisk = this.inriskArr[this.month];
       }
       
       if (this.risk && this.inrisk) {
@@ -510,6 +512,15 @@ MyApp.setUpTangle = function (divId, risks, inrisks) {
     }
   });
 };
+
+MyApp.updateTangle = function (risks, inrisks) {
+  "use strict";
+  MyApp.tangle.setValues({
+    riskArr: risks,
+    inriskArr: inrisks,
+    month: new Date().getMonth()
+  })
+}
 
 MyApp.geocoder = new google.maps.Geocoder();
 
@@ -638,8 +649,7 @@ MyApp.submitForm = function () {
             $('#popsummary').text(data.result.popsummary);
 
             $('#climatesummary').removeClass('hidden');
-            MyApp.setUpTangle("climatesummary", data.result.destclimate_arr, data.result.inclimate_arr);
-            $('.TKAdjustableNumber').append('<span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span>');
+            MyApp.updateTangle(data.result.destclimate_arr, data.result.inclimate_arr);
           }
         });
     });
@@ -673,6 +683,9 @@ $(document).ready(function () {
   
   // Load ladder
   MyApp.drawLadder('ladder');
+  
+  // Set up Tangle
+  MyApp.setUpTangle("climatesummary");
   
   // Client-side validation of input
   $('input[name="destination"]').on('keyup textinput', MyApp.checkSubmit);
