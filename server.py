@@ -337,7 +337,7 @@ def get_result(lat, lng, mydate, state, county=None):
         #risk_arr = [risk_names[v] for v in risks['mosquito_season']]
         risk_arr = [int(v) for v in risks['mosquito_season']]
         result_dict['destclimate_arr'] = risk_arr
-    app.logger.debug('destclimate_arr')
+    app.logger.debug(result_dict['destclimate_arr'])
     result_kwargs['climate'] = mosquito_risk_names[mosquito_risk]
     result_kwargs['climateclass'] = mosquito_risk_classes[mosquito_risk]
 
@@ -484,6 +484,7 @@ def get_climate(latlng):
 
     if (temp_risk is not None and not temp_risk) or (rain_risk is not None and not rain_risk):
         result_dict['mosquito_risk'] = False
+        result_dict['mosquito_season'] = [0] * 12
     else:
         # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3700474/
         # roughly 100 degree days for Culex
