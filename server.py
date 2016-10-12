@@ -52,8 +52,205 @@ census_url = "http://api.census.gov/data/2015/acs1"
 def index():
     return render_template('index.html')
 
+@app.route('/get_pop', methods=['GET', 'OPTIONS'])
+def get_pop():
 
-@app.route('/calculate', methods=['GET', 'OPTIONS'])
+    state = request.args.get('state')
+    county = request.args.get('county')
+
+    result_dict = dict(instatepop=None,
+                       deststatepop=None,
+                       incountypop=None,
+                       destcountypop=None,
+                       popsummary=None,
+                       error=None)
+
+    errors = list()
+    if not state:
+        errors.append('state not specified')
+
+    if errors:
+        msg = ", ".join(errors)
+        return jsonify(result=dict(error=msg))
+
+    pop_dict = get_population(state=state, county=county)
+    if pop_dict['error']:
+        errors.append(pop_dict['error'])
+    in_pop_dict = get_population(state="indiana", county="tippecanoe")
+    if pop_dict['error']:
+        errors.append(in_pop_dict['error'])
+
+    inloc = "Indiana"
+    destination = state
+    pop = pop_dict['state_pop']
+    inpop = in_pop_dict['state_pop']
+    if county:
+        inloc = "Tippecanoe County, Indiana"
+        destination = "{0}, {1}".format(county, state)
+        pop = pop_dict['county_pop']
+        inpop = in_pop_dict['county_pop']
+
+    popsummary = "No population comparison was available. In general, traveling to a less populous area may reduce your risk."
+    if pop is not None and inpop is not None:
+        popratio = pop * 1.0 / inpop
+        if popratio > 2:
+            popsummary = "{destination} is more populous than {inloc}. You could reduce your risk by traveling to a less populous area."
+        elif popratio < 0.5:
+            popsummary = "{destination} is less populous than {inloc}. This may reduce your risk."
+        else:
+            popsummary = "{destination} and {inloc} have similar populations. You could reduce your risk by traveling to a less populous area."
+
+    result_dict['instatepop'] = in_pop_dict['state_pop']
+    result_dict['incountypop'] = in_pop_dict['county_pop']
+    result_dict['deststatepop'] = pop_dict['state_pop']
+    result_dict['destcountypop'] = pop_dict['county_pop']
+    result_dict['popsummary'] = popsummary.format(destination=destination, inloc=inloc)
+    if errors:
+        result_dict['error'] = ", ".join(errors)
+
+    return jsonify(result=result_dict)
+
+@app.route('/get_cases', methods=['GET', 'OPTIONS'])
+def get_cases():
+    state = request.args.get('state')
+
+    result_dict = dict(incases=None,
+                       destcases=None,
+                       casesummary=None,
+                       error=None)
+
+    errors = list()
+    if not state:
+        errors.append('state not specified')
+
+    if errors:
+        msg = ", ".join(errors)
+        return jsonify(result=dict(error=msg))
+
+    cases = None
+    incases = None
+    app.logger.debug("getting zika data")
+    def add_zika_row(row):
+        case1 = row[1]
+        case2 = row[2]
+        try:
+            case1 = int(case1)
+            case2 = int(case2)
+        except (ValueError, TypeError):
+            app.logger.error("Invalid cases number")
+        else:
+            return case1 + case2
+    zika_data = get_zika()
+    for row in zika_data[1:]:
+        app.logger.debug("{0} {1} {2} {3} ".format(row[0], state, state.lower() == row[0].lower(), row[0].lower() == "indiana"))
+        if row[0].lower() == state.lower():
+            cases = add_zika_row(row)
+        if row[0].lower() == "indiana":
+            incases = add_zika_row(row)
+    if cases is None:
+        errors.append("No case data was found for %s." % state)
+
+    casesummary = "No case comparison was available. In general, traveling to an area with fewer cases may reduce your risk."
+    if cases is not None and incases is not None:
+        caseratio = cases * 1.0 / incases
+        if caseratio > 2:
+            casesummary = "{state} has more cases of Zika virus than Indiana. You could reduce your risk by traveling to an area with fewer cases."
+        elif caseratio < 0.5:
+            casesummary = "{state} has fewer cases of Zika virus than Indiana. This may reduce your risk."
+        else:
+            casesummary = "{state} and Indiana have similar numbers of Zika virus cases. You could reduce your risk by traveling to an area with fewer cases."
+
+    result_dict['incases'] = incases
+    result_dict['destcases'] = cases
+    result_dict['casesummary'] = casesummary.format(state=state)
+    if errors:
+        result_dict['error'] = ", ".join(errors)
+
+    return jsonify(result=result_dict)
+
+@app.route('/get_climate', methods=['GET', 'OPTIONS'])
+def get_climate():
+    lat = request.args.get('lat', type=float)
+    lng = request.args.get('lng', type=float)
+    month_no = request.args.get('date', type=int)
+    
+    result_dict = dict(destclimaterisk=None,
+                       destclimate_arr=None,
+                       inclimate_arr=None,
+                       error=None)
+
+    errors = list()
+    # parse date
+    if month_no < 0 or month_no > 11:
+        errors.append('invalid month')
+
+    if errors:
+        msg = ", ".join(errors)
+        return jsonify(result=dict(error=msg))
+
+    # Are mosquitoes active in the destination?
+    # Is it mosquito season?
+    try:
+        climate_dict = get_climate(latlng=(lat, lng))
+    except Exception:
+        app.logger.debug(lat)
+        app.logger.debug(type(lat))
+        app.logger.debug(lng)
+        app.logger.debug(type(lng))
+        raise
+    if climate_dict['error']:
+        errors.append(climate_dict['error'])
+
+    in_climate_dict = get_climate(latlng=(40.4237, -86.9212))
+    if in_climate_dict['error']:
+        errors.append(in_climate_dict['error'])
+
+    # Truth table
+    #mosquito_risk   mosquito_season risk
+    #True    None    unknown
+    #None    None    unknown
+    #True    True    in season
+    #None    True    in season
+    #True    False   out of season
+    #None    False   out of season
+    #False   False   minimal
+    #False   True    minimal
+    #False   None    minimal
+
+    def parse_risk(mosquito_risk, mosquito_season, **kwargs):
+        if mosquito_risk is None or mosquito_risk:
+            if mosquito_season is None:
+                # If mosquito season is unknown, overall risk is unknown
+                return 1
+            elif mosquito_season[month_no]:
+                # Mosquito season is risk
+                return 3
+            else:
+                # Not mosquito season reduces risk
+                return 2
+        else:
+            # No mosquito risk
+            return 0
+
+    mosquito_risk = parse_risk(**climate_dict)
+    risk_arr = None
+    if climate_dict['mosquito_season'] is not None:
+        risk_arr = [int(v) for v in climate_dict['mosquito_season']]
+
+    inclimate_arr = None
+    if in_climate_dict['mosquito_season'] is not None:
+        inclimate_arr = [int(v) for v in in_climate_dict['mosquito_season']]
+
+    result_dict['destclimaterisk'] = mosquito_risk
+    result_dict['destclimate_arr'] = risk_arr
+    result_dict['inclimate_arr'] = inclimate_arr
+
+    if errors:
+        result_dict['error'] = ", ".join(errors)
+
+    return jsonify(result=result_dict)
+
+#@app.route('/calculate', methods=['GET', 'OPTIONS'])
 def calculate():
     #    destination = request.form.get('destination')
     #    date = request.form.get('date')
@@ -492,6 +689,8 @@ def get_population(state, county=None):
     result = dict(error=None,
                   state_pop=None,
                   county_pop=None)
+    state_pop = None
+    county_pop = None
 
     kwargs = dict(key=census_api_key)
     state_param = "?get=NAME,B01001_001E&for=state:*&key={key}".format(**kwargs)
@@ -506,7 +705,7 @@ def get_population(state, county=None):
     state_number = None
     for row in state_data[1:]:
         if row[name_index].lower() == state.lower():
-            result['state_pop'] = row[pop_index]
+            state_pop = row[pop_index]
             state_number = row[number_index]
             break
 
@@ -525,21 +724,25 @@ def get_population(state, county=None):
         c_pop_index = c_header.index("B01001_001E")
         for row in county_data[1:]:
             if row[c_name_index].lower().startswith(county.lower()):
-                result['county_pop'] = row[c_pop_index]
+                county_pop = row[c_pop_index]
                 break
 
     errors = list()
     # Cast populations to integer
-    if result['state_pop'] is not None:
+    if state_pop is not None:
         try:
-            result['state_pop'] = int(result['state_pop'])
+            state_pop = int(state_pop)
         except ValueError:
             errors.append("Incorrectly formatted state population")
-    if result['county_pop'] is not None:
+        else:
+            result['state_pop'] = state_pop
+    if county_pop is not None:
         try:
-            result['county_pop'] = int(result['county_pop'])
+            county_pop = int(county_pop)
         except ValueError:
             errors.append("Incorrectly formatted county population")
+        else:
+            result['county_pop'] = county_pop
 
     if errors:
         result['error'] = errors
