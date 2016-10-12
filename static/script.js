@@ -579,7 +579,8 @@ MyApp.submitForm = function () {
       alert('Geocode not successful: ' + status);
     }).then(function (response) {
       // TODO determine how to parse address_components
-      var x, country, state, stateAbbr, county, component;
+      var x, country, state, stateAbbr, county, component,
+          deststatepop, instatepop, destcases, incases;
       //            console.log(response.address_components);
       for (x = 0; x < response.address_components.length; x += 1) {
         component = response.address_components[x];
@@ -614,61 +615,152 @@ MyApp.submitForm = function () {
       //      console.log(country);
       //      console.log(state);
       //      console.log(county);
-      $.getJSON($SCRIPT_ROOT + '/calculate', {
-          lat: response.geometry.location.lat(),
-          lng: response.geometry.location.lng(),
-          date: dateInput,
+      
+      $.when(
+        $.getJSON($SCRIPT_ROOT + '/get_pop', {
           state: state,
           county: county
-        },
-        function (data) {
-          var pop_y, case_y, popColor, caseColor;
+        }, function (data) {
+          // Display population
+          var pop_x, pop_y, popColor;
           if (data.result.error) {
-            $('#result').text("Error: " + data.result.error);
+            $('#popsummary').text("Error: " + data.result.error);
             return 1;
           } else {
-            //console.log(data.result);
-            //$('input[name=destination]').focus().select();
-
-            //MyApp.drawGauge(data.result.risk);
-            //console.log(data.result.destrisk);
-            //console.log(data.result.inrisk);
-            MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
-            //console.log(data.result.text)
-
             popColor = 'rgb(119, 190, 222)';
-            caseColor = 'rgb(229, 170, 38)';
-
-            // update case and pop charts
-            case_y = ['IN', stateAbbr];
-            MyApp.updateBar('casebox',
-              case_y, [data.result.incases,
-                             data.result.destcases],
-              caseColor);
+            instatepop = data.result.instatepop;
+            deststatepop = data.result.deststatepop;
             if (county !== null && county !== 'undefined') {
-              pop_y = ['Tippecanoe', county.replace('County', '')];
+              pop_x = ['Tippecanoe', county.replace('County', '')];
+              pop_y = [data.result.incountypop, data.result.destcountypop];
             } else {
-              pop_y = case_y;
+              pop_x = ['IN', stateAbbr];
+              pop_y = [instatepop, deststatepop];
             }
             MyApp.updateBar('popbox',
-              pop_y, [data.result.inpop,
-                             data.result.destpop],
-              popColor);
-
-            $('#casesummary').text(data.result.casesummary);
+              pop_x, pop_y, popColor);          
             $('#popsummary').text(data.result.popsummary);
-
+          }
+        }),
+        $.getJSON($SCRIPT_ROOT + '/get_cases', {
+          state: state
+        }, function (data) {
+          // Display cases
+          var caseColor;
+          if (data.result.error) {
+            $('#casesummary').text("Error: " + data.result.error);
+            return 1;
+          } else {
+            caseColor = 'rgb(229, 170, 38)';
+            incases = data.result.incases;
+            destcases = data.result.destcases;
+            // update case and pop charts
+            MyApp.updateBar('casebox',
+              ['IN', stateAbbr], [incases, destcases], caseColor);
+            $('#casesummary').text(data.result.casesummary);
+          }
+        })
+      ).then(function () {
+        // Display risk rate
+        var destrisk, inrisk;
+        if (deststatepop && destcases) {
+          console.log(deststatepop);
+          console.log(destcases);
+          destrisk = destcases / deststatepop * 1000000;
+        } else {
+          destrisk = 0;
+        }
+        if (instatepop && incases) {
+          inrisk = incases / instatepop * 1000000;
+        } else {
+          inrisk = 0;
+        }
+        MyApp.updateLadder('ladder', destrisk, inrisk);
+      }, function () {
+        // Risk fail
+      });
+      
+      $.getJSON($SCRIPT_ROOT + '/get_climate', {
+          lat: response.geometry.location.lat(),
+          lng: response.geometry.location.lng(),
+          date: dateInput
+        },
+        function (data) {
+          // Display climate
+          if (data.result.error) {
+            $('#climateerror').text("Error: " + data.result.error);
+            return 1;
+          } else {
             $('#climatesummary').removeClass('hidden');
             if (data.result.destclimaterisk === 0) {
               $('#climatefalse').removeClass('hidden');
             } else if (data.result.destclimaterisk === 1) {
               $('#climateunknown').removeClass('hidden');
             }
+            console.log(data.result.destclimate_arr);
+            console.log(data.result.inclimate_arr);
             MyApp.updateTangle(data.result.destclimate_arr,
               data.result.inclimate_arr,
-              dateInput);
+              $('select[name="date"]').val());
           }
-        });
+      });
+      
+      
+//      $.getJSON($SCRIPT_ROOT + '/calculate', {
+//          lat: response.geometry.location.lat(),
+//          lng: response.geometry.location.lng(),
+//          date: dateInput,
+//          state: state,
+//          county: county
+//        },
+//        function (data) {
+//          var pop_y, case_y, popColor, caseColor;
+//          if (data.result.error) {
+//            $('#result').text("Error: " + data.result.error);
+//            return 1;
+//          } else {
+//            //console.log(data.result);
+//            //$('input[name=destination]').focus().select();
+//
+//            //MyApp.drawGauge(data.result.risk);
+//            //console.log(data.result.destrisk);
+//            //console.log(data.result.inrisk);
+//            MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
+//            //console.log(data.result.text)
+//
+//            popColor = 'rgb(119, 190, 222)';
+//            caseColor = 'rgb(229, 170, 38)';
+//
+//            // update case and pop charts
+//            case_y = ['IN', stateAbbr];
+//            MyApp.updateBar('casebox',
+//              case_y, [data.result.incases,
+//                             data.result.destcases],
+//              caseColor);
+//            if (county !== null && county !== 'undefined') {
+//              pop_y = ['Tippecanoe', county.replace('County', '')];
+//            } else {
+//              pop_y = case_y;
+//            }
+//            MyApp.updateBar('popbox',
+//              pop_y, [data.result.inpop,
+//                             data.result.destpop],
+//              popColor);
+//
+//            $('#casesummary').text(data.result.casesummary);
+//            $('#popsummary').text(data.result.popsummary);
+//
+//            $('#climatesummary').removeClass('hidden');
+//            if (data.result.destclimaterisk === 0) {
+//              $('#climatefalse').removeClass('hidden');
+//            } else if (data.result.destclimaterisk === 1) {
+//              $('#climateunknown').removeClass('hidden');
+//            }
+//            MyApp.updateTangle(data.result.destclimate_arr,
+//              data.result.inclimate_arr,
+//              dateInput);
+//          }
+//        });
     });
   }
 
@@ -714,12 +806,12 @@ $(document).ready(function () {
   $(document).ajaxStart(function () {
     MyApp.disableSubmit();
     $('body').addClass("loading");
-    //console.log( "Triggered ajaxStart handler." );
+    console.log( "Triggered ajaxStart handler." );
   });
   $(document).ajaxStop(function () {
     $('body').removeClass("loading");
     MyApp.checkSubmit();
-    //console.log( "Triggered ajaxStop handler." );
+    console.log( "Triggered ajaxStop handler." );
   });
 
   // Bind enter to submit
