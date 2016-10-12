@@ -101,6 +101,10 @@ body.loading .spinner {
   opacity: 0.75;
 }
 
+.inactive:hover {
+  opacity: 1;
+}
+
 .highlight {
   opacity: 1;
 /*  border: 1px solid black;*/
