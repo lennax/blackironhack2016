@@ -347,18 +347,19 @@ MyApp.drawLadder = function (div) {
       type: 'log',
       rangemode: 'nonnegative'
     },
-    //  margin: {
-    //    l: 140,
-    //    r: 40,
-    //    b: 50,
-    //    t: 80
-    //  },
+    margin: {
+      l: 50,
+      r: 50,
+      b: 50,
+      t: 50,
+      pad: 4
+    },
     showlegend: false,
     legend: {
       orientation: 'h'
     },
 
-    width: 500,
+    width: 550,
     height: 400,
     paper_bgcolor: 'rgb(254, 247, 234)',
     plot_bgcolor: 'rgb(254, 247, 234)'
@@ -632,14 +633,14 @@ MyApp.submitForm = function () {
               popColor);
 
             $('.casesrc').hover(function () {
-              $('#casebox').removeClass('inactive');
+              $('#casebox').removeClass('inactive').addClass('highlight');
             }, function () {
-              $('#casebox').addClass('inactive');
+              $('#casebox').addClass('inactive').removeClass('highlight');
             });
             $('.popsrc').hover(function () {
-              $('#popbox').removeClass('inactive');
+              $('#popbox').removeClass('inactive').addClass('highlight');
             }, function () {
-              $('#popbox').addClass('inactive');
+              $('#popbox').addClass('inactive').removeClass('highlight');;
             });
 
             $('.deststate').text(state);
