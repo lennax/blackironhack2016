@@ -33,7 +33,7 @@ MyApp.validData = function () {
 
 MyApp.initMap = function () {
   "use strict";
-  
+
   var location, mapCanvas, mapOptions, map, input, autocomplete, infowindow, marker, address;
 
   // Geographic center of continental US
@@ -56,7 +56,7 @@ MyApp.initMap = function () {
   input = document.getElementById('destination');
 
   //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-  
+
   autocomplete = new google.maps.places.Autocomplete(input);
   autocomplete.bindTo('bounds', map);
 
@@ -71,7 +71,7 @@ MyApp.initMap = function () {
     marker.setVisible(false);
     var place = autocomplete.getPlace();
     if (!place.geometry) {
-//      window.alert("Autocomplete's returned place contains no geometry");
+      //      window.alert("Autocomplete's returned place contains no geometry");
       return;
     }
 
@@ -104,7 +104,7 @@ MyApp.initMap = function () {
     infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
     infowindow.open(map, marker);
   });
-  
+
   // Default data
   document.getElementById('date').valueAsDate = new Date();
   document.getElementById('destination').value = "Miami, FL";
@@ -113,7 +113,7 @@ MyApp.initMap = function () {
 
 MyApp.drawGauge = function (risk) {
   "use strict";
-  
+
   var data, options, chart;
 
   // Load Google chart package
@@ -161,7 +161,7 @@ MyApp.drawBar = function (div, x_arr, ylabel) {
       fixedrange: true
     },
     yaxis: {
-//      title: ylabel,
+      //      title: ylabel,
       fixedrange: true,
       rangemode: 'nonnegative'
     },
@@ -214,7 +214,7 @@ MyApp.updateBar = function (div, x_arr, y_arr, color) {
 
 MyApp.drawLadder = function (div) {
   "use strict";
-  
+
   var cause, rate, breakpoint, deathColor, deathMarker, dummytrace, smalltrace, largetrace, data, xticktext, xtickvals, layout;
 
   cause = [
@@ -357,7 +357,7 @@ MyApp.drawLadder = function (div) {
     height: 400,
     paper_bgcolor: 'rgb(254, 247, 234)',
     plot_bgcolor: 'rgb(254, 247, 234)'
-    //  hovermode: 'closest'
+      //  hovermode: 'closest'
   };
 
   Plotly.newPlot(div, data, layout);
@@ -365,9 +365,9 @@ MyApp.drawLadder = function (div) {
 
 MyApp.updateLadder = function (div, destcases, incases) {
   "use strict";
-  
+
   var caseColor, caseMarker, caseColorIn, caseMarkerIn, zikatrace, zikatrace_in;
-  
+
   caseColor = 'rgba(211, 115, 38, 0.95)';
   caseMarker = {
     color: caseColor,
@@ -389,7 +389,7 @@ MyApp.updateLadder = function (div, destcases, incases) {
     symbol: 'diamond',
     size: 16
   };
-  
+
   zikatrace = {
     type: 'scatter',
     x: [destcases],
@@ -413,7 +413,7 @@ MyApp.updateLadder = function (div, destcases, incases) {
     //showlegend: false,
     marker: caseMarkerIn
   };
-  
+
   Plotly.addTraces(div, [zikatrace, zikatrace_in]);
 
   Plotly.relayout(div, {
@@ -462,7 +462,7 @@ MyApp.updateLadder = function (div, destcases, incases) {
 
 MyApp.setUpTangle = function (divId) {
   "use strict";
-  
+
   var element, months, tangle;
 
   element = document.getElementById(divId);
@@ -485,7 +485,7 @@ MyApp.setUpTangle = function (divId) {
   Tangle.formats.month = function (value) { // formats 0.42 as "42%"
     return months[value];
   };
-  
+
   MyApp.tangle = new Tangle(element, {
     initialize: function () {
       this.riskArr = null;
@@ -499,7 +499,7 @@ MyApp.setUpTangle = function (divId) {
       if (this.inriskArr !== null && this.inriskArr !== 'undefined') {
         this.inrisk = this.inriskArr[this.month];
       }
-      
+
       if (this.risk && this.inrisk) {
         this.riskcmp = 0;
       } else if (!this.risk && !this.inrisk) {
@@ -519,8 +519,8 @@ MyApp.updateTangle = function (risks, inrisks) {
     riskArr: risks,
     inriskArr: inrisks,
     month: new Date().getMonth()
-  })
-}
+  });
+};
 
 MyApp.geocoder = new google.maps.Geocoder();
 
@@ -543,7 +543,7 @@ MyApp.geocode = function (address) {
 
 MyApp.submitForm = function () {
   "use strict";
-  
+
   var destination;
 
   if (MyApp.validData()) {
@@ -591,12 +591,12 @@ MyApp.submitForm = function () {
       console.log(state);
       console.log(county);
       $.getJSON($SCRIPT_ROOT + '/calculate', {
-        lat: response.geometry.location.lat(),
-        lng: response.geometry.location.lng(),
-        date: $('input[name="date"]').val(),
-        state: state,
-        county: county
-      },
+          lat: response.geometry.location.lat(),
+          lng: response.geometry.location.lng(),
+          date: $('input[name="date"]').val(),
+          state: state,
+          county: county
+        },
         function (data) {
           var pop_y, case_y, popColor, caseColor;
           if (data.result.error) {
@@ -605,42 +605,40 @@ MyApp.submitForm = function () {
           } else {
             //console.log(data.result);
             //$('input[name=destination]').focus().select();
-            
+
             //MyApp.drawGauge(data.result.risk);
             //console.log(data.result.destrisk);
             //console.log(data.result.inrisk);
             MyApp.updateLadder('ladder', data.result.destrisk, data.result.inrisk);
             //console.log(data.result.text)
-            
+
             popColor = 'rgb(119, 190, 222)';
             caseColor = 'rgb(229, 170, 38)';
-            
+
             // update case and pop charts
             case_y = ['IN', stateAbbr];
             MyApp.updateBar('casebox',
-                            case_y,
-                            [data.result.incases,
+              case_y, [data.result.incases,
                              data.result.destcases],
-                            caseColor);
+              caseColor);
             if (county !== null && county !== 'undefined') {
               pop_y = ['Tippecanoe', county.replace('County', '')];
             } else {
               pop_y = case_y;
             }
             MyApp.updateBar('popbox',
-                            pop_y,
-                            [data.result.inpop,
+              pop_y, [data.result.inpop,
                              data.result.destpop],
-                            popColor);
-            
-            $('.casesrc').hover(function() {
+              popColor);
+
+            $('.casesrc').hover(function () {
               $('#casebox').removeClass('inactive');
-            }, function() {
+            }, function () {
               $('#casebox').addClass('inactive');
             });
-            $('.popsrc').hover(function() {
+            $('.popsrc').hover(function () {
               $('#popbox').removeClass('inactive');
-            }, function() {
+            }, function () {
               $('#popbox').addClass('inactive');
             });
 
@@ -661,8 +659,8 @@ MyApp.submitForm = function () {
 // Process form and call python
 $(document).ready(function () {
   "use strict";
-  
-  var today = new Date()
+
+  var today = new Date();
 
   // Add functionality to nav tabs
   $('#myNavTabs a').click(function (e) {
@@ -670,7 +668,7 @@ $(document).ready(function () {
     e.preventDefault();
     $(this).tab('show');
   });
-  
+
   // Add date
   $('.today').text(today.toLocaleDateString());
 
@@ -680,13 +678,13 @@ $(document).ready(function () {
   // Init bar charts
   MyApp.drawBar('casebox', ['IN', ''], 'Cases in state');
   MyApp.drawBar('popbox', ['Tippecanoe', ''], 'Population');
-  
+
   // Load ladder
   MyApp.drawLadder('ladder');
-  
+
   // Set up Tangle
   MyApp.setUpTangle("climatesummary");
-  
+
   // Client-side validation of input
   $('input[name="destination"]').on('keyup textinput', MyApp.checkSubmit);
   $('input[name="date"]').prop('min', today.toISOString().substring(0, 10));
