@@ -495,7 +495,7 @@ MyApp.setUpTangle = function (divId) {
     "December"
   ];
 
-  Tangle.formats.month = function (value) { // formats 0.42 as "42%"
+  Tangle.formats.month = function (value) {
     return months[value];
   };
 
@@ -568,8 +568,8 @@ MyApp.submitForm = function () {
     destination = $('input[name="destination"]').val();
     //console.log(destination)
 
-    dateInput = $('select[name="date"]').val();
-    //    console.log(dateInput);
+    dateInput = parseInt($('select[name="date"]').val());
+    //console.log(dateInput);
 
     MyApp.geocode(destination).then(function (response) {
       //console.log("Success!", response);
@@ -706,8 +706,6 @@ $(document).ready(function () {
 
   // Client-side validation of input
   $('input[name="destination"]').on('keyup textinput', MyApp.checkSubmit);
-  $('input[name="date"]').prop('min', today.toISOString().substring(0, 10));
-  $('input[name="date"]').on('change', MyApp.checkSubmit);
 
   // Bind button click to submit
   $('input#submit').bind('click', MyApp.submitForm);
