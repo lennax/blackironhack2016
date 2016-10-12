@@ -16,7 +16,7 @@ Keywords
 Datasets
 --------
 * NOAA Climate Normals Monthly
-    - http://www.ncdc.noaa.gov/cdo-web/api/v2/
+    - http://www.ncdc.noaa.gov/cdo-web/webservices/v2
     - JSON data
     - Normal annual precipitation, temperature, and growing degree day information is used to assess the suitability of the climate for mosquitoes
     - Data is available for the entire US
@@ -28,7 +28,7 @@ Datasets
     - Data is available for the entire US
 
 * 2015 American Community Survey Subject Tables
-    - http://api.census.gov/data/2015/acs1
+    - http://www.census.gov/data/developers/data-sets/acs-1yr.html
     - JSON data
     - The population of the corresponding county or state is used
     - Data is available for the entire US
