@@ -4,7 +4,13 @@ README
 Travel Risk Evaluation
 ----------------------
 
-[REDACTED]
+Copyright 2016 Lenna X. Peterson
+
+Contact: lenna.peterson@gmail.com
+
+License: GPL v3
+
+This distribution also includes Tangle.js, which is covered by the MIT license
 
 Keywords
 --------
