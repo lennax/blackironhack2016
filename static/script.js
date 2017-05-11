@@ -1,5 +1,6 @@
 /**
- * [ REDACTED ]
+Copyright 2016 Lenna X. Peterson
+This file is part of Travel Risk Evaluation.
  **/
 
 if (typeof MYAPPLICATION === "undefined") {
